@@ -43,4 +43,22 @@ export default async function ConnectPage() {
                 {s.description && <p className="mt-1 text-sm text-muted">{s.description}</p>}
               </div>
             </div>
-   
+            <ArrowUpRight size={18} className="text-muted transition group-hover:text-[var(--fg)]" />
+          </a>
+        ))}
+      </div>
+
+      <div className="mx-auto mt-20 max-w-2xl">
+        <div className="mb-8 text-center">
+          <p className="eyebrow">Write to Aswin</p>
+          <h2 className="mt-3 font-serif text-3xl font-medium">Start a conversation</h2>
+          <p className="mx-auto mt-3 max-w-md text-sm text-muted">
+            A thought to share, a discussion, or a collaboration. Send a note and
+            you will get a reply straight to your inbox.
+          </p>
+        </div>
+        <ContactForm subjects={subjects} />
+      </div>
+    </div>
+  );
+}

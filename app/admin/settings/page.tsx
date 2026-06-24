@@ -5,7 +5,17 @@ import { SubmitButton } from "@/components/admin/confirm-submit";
 import { getQuotes, getSettings } from "@/lib/queries";
 import { storageUrl } from "@/lib/storage";
 
-function Toggle({ name, label, hint, on }: { name: string; label: string; hint?: string; on?: boolean | null }) {
+function Toggle({
+  name,
+  label,
+  hint,
+  on,
+}: {
+  name: string;
+  label: string;
+  hint?: string;
+  on?: boolean | null;
+}) {
   return (
     <label className="flex items-center justify-between gap-4 border-b border-line py-3 last:border-0">
       <span>
@@ -24,14 +34,13 @@ export default async function SettingsPage() {
 
   return (
     <div className="max-w-2xl">
-      <PageHeader title="Settings & banner" desc="Your photo, channel banner, sponsor, ads and integrations." />
+      <PageHeader title="Settings and banner" desc="Your photo, channel banner, sponsor, ads and integrations." />
 
       <form action={updateSettings} className="space-y-6">
-        {/* Channel header banner */}
         <Card>
           <h2 className="mb-2 font-medium">Channel header image</h2>
           <p className="mb-4 text-sm text-muted">
-            Like a YouTube banner. No 5&nbsp;MB limit — upload full quality. Recommended 2560×1440.
+            Like a YouTube banner. No 5 MB limit, upload full quality. Recommended 2560x1440.
           </p>
           {header && (
             <div className="relative mb-4 aspect-[16/5] w-full overflow-hidden rounded-lg border border-line">
@@ -43,21 +52,13 @@ export default async function SettingsPage() {
             <label className="mb-1.5 block text-sm text-muted">
               Mobile focal point (slide to choose what stays centered on phones)
             </label>
-            <input
-              type="range"
-              name="header_focus_x"
-              min={0}
-              max={100}
-              defaultValue={settings?.header_focus_x ?? 50}
-              className="w-full"
-            />
+            <input type="range" name="header_focus_x" min={0} max={100} defaultValue={settings?.header_focus_x ?? 50} className="w-full" />
           </div>
         </Card>
 
-        {/* Portrait */}
         <Card>
           <h2 className="mb-2 font-medium">Your photo</h2>
-          <p className="mb-4 text-sm text-muted">Shown above the featured quote. No 5&nbsp;MB limit.</p>
+          <p className="mb-4 text-sm text-muted">Shown above the featured quote. No 5 MB limit.</p>
           <div className="flex items-center gap-5">
             <div className="relative h-24 w-20 overflow-hidden rounded-lg border border-line">
               {portrait ? (
@@ -70,7 +71,6 @@ export default async function SettingsPage() {
           </div>
         </Card>
 
-        {/* Hero text */}
         <Card>
           <h2 className="mb-4 font-medium">Homepage text</h2>
           <div className="space-y-4">
@@ -81,10 +81,9 @@ export default async function SettingsPage() {
           </div>
         </Card>
 
-        {/* Featured quote */}
         <Card>
           <h2 className="mb-2 font-medium">Featured quote</h2>
-          <p className="mb-4 text-sm text-muted">Leave on “Latest uploaded” to always show your newest quote.</p>
+          <p className="mb-4 text-sm text-muted">Leave on "Latest uploaded" to always show your newest quote.</p>
           <select name="featured_quote_id" defaultValue={settings?.featured_quote_id ?? ""} className={inputCls}>
             <option value="">Latest uploaded (automatic)</option>
             {quotes.map((q) => (
@@ -93,10 +92,9 @@ export default async function SettingsPage() {
           </select>
         </Card>
 
-        {/* Sponsor banner */}
         <Card>
           <h2 className="mb-2 font-medium">Sponsor banner (scrolling headline)</h2>
-          <p className="mb-4 text-sm text-muted">A thin headline that scrolls right→left. Visitors can’t close it; only you toggle it here.</p>
+          <p className="mb-4 text-sm text-muted">A thin headline that scrolls right to left. Visitors cannot close it; only you toggle it here.</p>
           <Toggle name="sponsor_enabled" label="Sponsor banner is live" on={settings?.sponsor_enabled} />
           <div className="mt-4 space-y-4">
             <Field label="Banner text"><input name="sponsor_text" defaultValue={settings?.sponsor_text ?? ""} className={inputCls} /></Field>
@@ -123,7 +121,6 @@ export default async function SettingsPage() {
           </div>
         </Card>
 
-        {/* Ads */}
         <Card>
           <h2 className="mb-2 font-medium">Google ads (AdSense)</h2>
           <p className="mb-4 text-sm text-muted">Paste your publisher ID once Google approves the site, then switch ads on.</p>
@@ -131,37 +128,37 @@ export default async function SettingsPage() {
           <div className="mt-2"><Toggle name="ads_enabled" label="Show Google ads on the site" on={settings?.ads_enabled} /></div>
         </Card>
 
-        {/* Toggles */}
         <Card>
           <h2 className="mb-4 font-medium">Display options</h2>
-          <Toggle name="show_view_counts" label="Show view counts to visitors" hint="The “1,240 views” label on writings." on={settings?.show_view_counts} />
+          <Toggle name="show_view_counts" label="Show view counts to visitors" hint="The view count label on writings." on={settings?.show_view_counts} />
           <Toggle name="videos_on_home" label="Show latest videos on the homepage" on={settings?.videos_on_home} />
           <Toggle name="shorts_enabled" label="Enable the Shorts feed" on={settings?.shorts_enabled} />
         </Card>
 
-        {/* Tags */}
         <Card>
           <h2 className="mb-2 font-medium">Viewer filter tags (up to 10)</h2>
-          <p className="mb-4 text-sm text-muted">Comma-separated. A tag only shows publicly once a quote uses it. “All” is always shown.</p>
+          <p className="mb-4 text-sm text-muted">Comma-separated. A tag only shows publicly once a quote uses it. "All" is always shown.</p>
           <input name="allowed_tags" defaultValue={(settings?.allowed_tags ?? []).join(", ")} className={inputCls} placeholder="Love, Wisdom, Solitude" />
         </Card>
 
-        {/* Contact subjects */}
         <Card>
           <h2 className="mb-2 font-medium">Contact subjects</h2>
-          <p className="mb-4 text-sm text-muted">
-            The subjects visitors choose when writing to you (used to filter your inbox). Comma-separated.
-          </p>
-          <input
-            name="contact_subjects"
-            defaultValue={(settings?.contact_subjects ?? ["Discussion", "Sharing Thoughts", "Collab Requests"]).join(", ")}
-            className={inputCls}
-            placeholder="Discussion, Sharing Thoughts, Collab Requests"
-          />
+          <p className="mb-4 text-sm text-muted">The subjects visitors choose when writing to you (used to filter your inbox). Comma-separated.</p>
+          <input name="contact_subjects" defaultValue={(settings?.contact_subjects ?? ["Discussion", "Sharing Thoughts", "Collab Requests"]).join(", ")} className={inputCls} placeholder="Discussion, Sharing Thoughts, Collab Requests" />
         </Card>
 
-        {/* Integrations */}
         <Card>
           <h2 className="mb-4 font-medium">Integrations</h2>
           <div className="space-y-4">
-            <Field label="YouTube channel ID"><input name="youtube_channel_id" defaultValue={settings?.youtube_channel_id ?? ""} class
+            <Field label="YouTube channel ID"><input name="youtube_channel_id" defaultValue={settings?.youtube_channel_id ?? ""} className={inputCls} placeholder="UC_lrBstHQdtQ8cHlFY0j6wQ" /></Field>
+            <Field label="Spotify show ID"><input name="spotify_show_id" defaultValue={settings?.spotify_show_id ?? ""} className={inputCls} /></Field>
+            <Field label="Pin a Spotify episode (blank = latest)"><input name="spotify_episode_id" defaultValue={settings?.spotify_episode_id ?? ""} className={inputCls} /></Field>
+          </div>
+        </Card>
+
+        <input type="hidden" name="about_md" value={settings?.about_md ?? ""} />
+        <SubmitButton>Save settings</SubmitButton>
+      </form>
+    </div>
+  );
+}

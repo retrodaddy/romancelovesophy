@@ -8,16 +8,12 @@ import { createClient } from "@/lib/supabase/server";
 import { slugify, readingTime } from "@/lib/utils";
 import { sendEmail, basicHtml, threadReplyAddress } from "@/lib/email";
 
-export const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB for quotes & general images
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
-async function uploadFile(
-  bucket: string,
-  file: File,
-  maxBytes?: number
-): Promise<string> {
+async function uploadFile(bucket: string, file: File, maxBytes?: number): Promise<string> {
   if (maxBytes && file.size > maxBytes) {
     throw new Error(
-      `That file is ${(file.size / 1048576).toFixed(1)} MB — the limit is ${(maxBytes / 1048576).toFixed(0)} MB. Please upload a smaller image.`
+      `That file is ${(file.size / 1048576).toFixed(1)} MB. The limit is ${(maxBytes / 1048576).toFixed(0)} MB. Please upload a smaller image.`
     );
   }
   const sb = createAdminClient();
@@ -33,18 +29,15 @@ async function uploadFile(
 }
 
 function imageSize(): { width: number; height: number } {
-  // dimensions are best captured client-side; default to portrait ratio
   return { width: 1080, height: 1350 };
 }
 
-// ── Sign out ─────────────────────────────────────────────────
 export async function signOut() {
   const sb = await createClient();
   await sb.auth.signOut();
   redirect("/login");
 }
 
-// ── Settings ─────────────────────────────────────────────────
 export async function updateSettings(formData: FormData) {
   await requireAdmin();
   const sb = createAdminClient();
@@ -53,16 +46,10 @@ export async function updateSettings(formData: FormData) {
   const str = (k: string) => (formData.get(k) as string) || null;
 
   const tags = String(formData.get("allowed_tags") || "")
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean)
-    .slice(0, 10);
+    .split(",").map((t) => t.trim()).filter(Boolean).slice(0, 10);
 
   const contact_subjects = String(formData.get("contact_subjects") || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .slice(0, 12);
+    .split(",").map((s) => s.trim()).filter(Boolean).slice(0, 12);
 
   const patch: Record<string, unknown> = {
     site_title: formData.get("site_title"),
@@ -74,9 +61,7 @@ export async function updateSettings(formData: FormData) {
     spotify_show_id: str("spotify_show_id"),
     spotify_episode_id: str("spotify_episode_id"),
     featured_quote_id: str("featured_quote_id"),
-    // header banner
     header_focus_x: Number(formData.get("header_focus_x")) || 50,
-    // sponsor marquee
     sponsor_enabled: bool("sponsor_enabled"),
     sponsor_text: str("sponsor_text"),
     sponsor_url: str("sponsor_url"),
@@ -84,10 +69,8 @@ export async function updateSettings(formData: FormData) {
     sponsor_color: str("sponsor_color"),
     sponsor_bg: str("sponsor_bg"),
     sponsor_speed: str("sponsor_speed"),
-    // ads
     adsense_client: str("adsense_client"),
     ads_enabled: bool("ads_enabled"),
-    // toggles
     show_view_counts: bool("show_view_counts"),
     shorts_enabled: bool("shorts_enabled"),
     videos_on_home: bool("videos_on_home"),
@@ -96,22 +79,16 @@ export async function updateSettings(formData: FormData) {
     updated_at: new Date().toISOString(),
   };
 
-  // Portrait & header banner: no 5 MB limit (full quality)
   const portrait = formData.get("portrait") as File | null;
-  if (portrait && portrait.size > 0) {
-    patch.portrait_path = await uploadFile("portraits", portrait);
-  }
+  if (portrait && portrait.size > 0) patch.portrait_path = await uploadFile("portraits", portrait);
   const header = formData.get("header") as File | null;
-  if (header && header.size > 0) {
-    patch.header_image = await uploadFile("header", header);
-  }
+  if (header && header.size > 0) patch.header_image = await uploadFile("header", header);
 
   await sb.from("settings").update(patch).eq("id", 1);
   revalidatePath("/");
   revalidatePath("/admin/settings");
 }
 
-// ── Quotes ───────────────────────────────────────────────────
 export async function createQuote(formData: FormData) {
   await requireAdmin();
   const sb = createAdminClient();
@@ -122,21 +99,14 @@ export async function createQuote(formData: FormData) {
   const w = Number(formData.get("width")) || imageSize().width;
   const h = Number(formData.get("height")) || imageSize().height;
 
-  // viewers filter by tags; each quote carries at most 2
-  const tags = (formData.getAll("tags") as string[])
-    .map((t) => t.trim())
-    .filter(Boolean)
-    .slice(0, 2);
+  const tags = (formData.getAll("tags") as string[]).map((t) => t.trim()).filter(Boolean).slice(0, 2);
 
   await sb.from("quotes").insert({
     title: formData.get("title") || null,
     caption: formData.get("caption") || null,
     alt_text: formData.get("alt_text") || null,
     category_id: formData.get("category_id") || null,
-    tags,
-    width: w,
-    height: h,
-    image_path,
+    tags, width: w, height: h, image_path,
     status: formData.get("status") || "published",
   });
 
@@ -155,11 +125,9 @@ export async function deleteQuote(id: string) {
   revalidatePath("/admin/quotes");
 }
 
-// ── Articles ─────────────────────────────────────────────────
 export async function saveArticle(formData: FormData) {
   await requireAdmin();
   const sb = createAdminClient();
-
   const id = formData.get("id") as string | null;
   const title = String(formData.get("title") || "").trim();
   const content_html = String(formData.get("content_html") || "");
@@ -179,17 +147,11 @@ export async function saveArticle(formData: FormData) {
   } as Record<string, unknown>;
 
   const cover = formData.get("cover") as File | null;
-  if (cover && cover.size > 0) {
-    base.cover_image = await uploadFile("article-images", cover);
-  }
-
+  if (cover && cover.size > 0) base.cover_image = await uploadFile("article-images", cover);
   if (status === "published") base.published_at = new Date().toISOString();
 
-  if (id) {
-    await sb.from("articles").update(base).eq("id", id);
-  } else {
-    await sb.from("articles").insert(base);
-  }
+  if (id) await sb.from("articles").update(base).eq("id", id);
+  else await sb.from("articles").insert(base);
 
   revalidatePath("/articles");
   revalidatePath("/admin/articles");
@@ -204,17 +166,12 @@ export async function deleteArticle(id: string) {
   revalidatePath("/admin/articles");
 }
 
-// ── Categories ───────────────────────────────────────────────
 export async function createCategory(formData: FormData) {
   await requireAdmin();
   const sb = createAdminClient();
   const name = String(formData.get("name") || "").trim();
   if (!name) return;
-  await sb.from("categories").insert({
-    name,
-    slug: slugify(name),
-    kind: formData.get("kind") || "both",
-  });
+  await sb.from("categories").insert({ name, slug: slugify(name), kind: formData.get("kind") || "both" });
   revalidatePath("/admin/categories");
 }
 
@@ -225,7 +182,6 @@ export async function deleteCategory(id: string) {
   revalidatePath("/admin/categories");
 }
 
-// ── Social links ─────────────────────────────────────────────
 export async function saveSocial(formData: FormData) {
   await requireAdmin();
   const sb = createAdminClient();
@@ -252,7 +208,6 @@ export async function deleteSocial(id: string) {
   revalidatePath("/admin/social");
 }
 
-// ── Downloads ────────────────────────────────────────────────
 export async function createDownload(formData: FormData) {
   await requireAdmin();
   const sb = createAdminClient();
@@ -262,10 +217,7 @@ export async function createDownload(formData: FormData) {
   await sb.from("downloads").insert({
     title: formData.get("title"),
     description: formData.get("description") || null,
-    file_path,
-    file_type: file.type,
-    size_bytes: file.size,
-    status: "published",
+    file_path, file_type: file.type, size_bytes: file.size, status: "published",
   });
   revalidatePath("/downloads");
   revalidatePath("/admin/downloads");
@@ -281,4 +233,42 @@ export async function deleteDownload(id: string) {
   revalidatePath("/admin/downloads");
 }
 
-// ── Enquiries ─────────────────────────────────────�
+export async function markEnquiryRead(id: string) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  await sb.from("enquiries").update({ is_read: true }).eq("id", id);
+  revalidatePath("/admin/enquiries");
+}
+
+export async function sendContactReply(formData: FormData) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const id = String(formData.get("contact_id") || "");
+  const body = String(formData.get("body") || "").trim();
+  if (!id || !body) return;
+
+  const { data: contact } = await sb.from("contacts").select("*").eq("id", id).maybeSingle();
+  if (!contact) return;
+
+  const subject = contact.subject ? `Re: ${contact.subject}` : "Re: your message to Romancelovesophy";
+
+  const sent = await sendEmail({
+    to: contact.email,
+    subject,
+    html: basicHtml(body, "Reply to this email to continue the conversation with Aswin."),
+    replyTo: threadReplyAddress(id),
+  });
+
+  await sb.from("contact_messages").insert({ contact_id: id, direction: "outbound", body, email_id: sent?.id ?? null });
+  await sb.from("contacts").update({ status: "replied", is_read: true, last_activity: new Date().toISOString() }).eq("id", id);
+
+  revalidatePath(`/admin/contacts/${id}`);
+  revalidatePath("/admin/contacts");
+}
+
+export async function markContactRead(id: string) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  await sb.from("contacts").update({ is_read: true }).eq("id", id);
+  revalidatePath("/admin/contacts");
+}

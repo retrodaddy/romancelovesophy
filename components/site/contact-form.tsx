@@ -20,7 +20,7 @@ export function ContactForm({ subjects = [] }: { subjects?: string[] }) {
       const data = await res.json();
       if (res.ok) {
         setState("done");
-        setMsg("Thank you — your message has reached Aswin. You'll get a reply by email.");
+        setMsg("Thank you. Your message has reached Aswin and you will get a reply by email.");
         (e.target as HTMLFormElement).reset();
       } else {
         setState("error");
@@ -52,9 +52,13 @@ export function ContactForm({ subjects = [] }: { subjects?: string[] }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <input name="phone" placeholder="Phone (optional)" className={field} />
         <select name="subject" className={field} defaultValue="">
-          <option value="" disabled>Choose a subject…</option>
+          <option value="" disabled>
+            Choose a subject...
+          </option>
           {subjects.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
       </div>
@@ -71,4 +75,9 @@ export function ContactForm({ subjects = [] }: { subjects?: string[] }) {
         disabled={state === "loading"}
         className="w-full rounded-md border border-[var(--fg)] px-6 py-3 text-sm transition hover:bg-[var(--fg)] hover:text-[var(--bg)] disabled:opacity-50"
       >
-        {stat
+        {state === "loading" ? "Sending..." : "Send message"}
+      </button>
+      {state === "error" && <p className="text-sm text-red-400">{msg}</p>}
+    </form>
+  );
+}

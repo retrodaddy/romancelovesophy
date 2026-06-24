@@ -7,7 +7,7 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Get in touch — general messages and business enquiries welcome.",
+  description: "Get in touch - general messages and business enquiries welcome.",
 };
 
 export default async function ContactPage() {
@@ -20,11 +20,11 @@ export default async function ContactPage() {
         <div>
           <p className="eyebrow">Say hello</p>
           <h1 className="mt-4 font-serif text-4xl font-medium leading-tight sm:text-5xl">
-            Let’s talk
+            Let us talk
           </h1>
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted">
-            Whether it’s a thoughtful note, a question, or a business
-            collaboration — this reaches the right place.
+            Whether it is a thoughtful note, a question, or a business
+            collaboration, this reaches the right place.
           </p>
           <div className="mt-8 flex items-center gap-4">
             {social.map((s) => (
@@ -36,4 +36,13 @@ export default async function ContactPage() {
                 aria-label={s.label}
                 className="text-muted transition hover:text-[var(--fg)]"
               >
-                <SocialIcon platform
+                <SocialIcon platform={s.platform} className="h-5 w-5" />
+              </a>
+            ))}
+          </div>
+        </div>
+        <ContactForm subjects={subjects} />
+      </div>
+    </div>
+  );
+}
