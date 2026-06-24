@@ -76,7 +76,6 @@ export type Settings = {
   youtube_channel_id: string | null;
   spotify_show_id: string | null;
   spotify_episode_id: string | null;
-  // v2
   header_image: string | null;
   header_focus_x: number | null;
   sponsor_enabled: boolean | null;
@@ -95,6 +94,27 @@ export type Settings = {
   contact_subjects: string[] | null;
 };
 
+export type Contact = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string | null;
+  status: "new" | "replied" | "closed";
+  is_read: boolean;
+  created_at: string;
+  last_activity: string;
+};
+
+export type ContactMessage = {
+  id: string;
+  contact_id: string;
+  direction: "inbound" | "outbound";
+  body: string;
+  email_id: string | null;
+  created_at: string;
+};
+
 export type VideoItem = {
   id: string;
   title: string;
@@ -103,9 +123,11 @@ export type VideoItem = {
   published_at: string | null;
 };
 
-export type Contact = {
+export type SpotifyEpisode = {
   id: string;
   name: string;
-  email: string;
-  phone: string | null;
-  subject: string | null;
+  description: string;
+  release_date: string;
+  duration_ms: number;
+  image: string | null;
+};
