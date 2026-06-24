@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { slugify, readingTime } from "@/lib/utils";
 import { sendEmail, basicHtml, threadReplyAddress } from "@/lib/email";
 
-export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 async function uploadFile(bucket: string, file: File, maxBytes?: number): Promise<string> {
   if (maxBytes && file.size > maxBytes) {
