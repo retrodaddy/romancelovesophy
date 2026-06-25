@@ -4,7 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { ShareMenu } from "@/components/site/share-menu";
-import { getArticleBySlug, getSettings } from "@/lib/queries";
+import { Comments } from "@/components/site/comments";
+import { getArticleBySlug, getSettings, getApprovedComments } from "@/lib/queries";
 import { incrementArticleView } from "@/lib/analytics";
 import { storageUrl } from "@/lib/storage";
 import { formatDate } from "@/lib/utils";
@@ -38,6 +39,7 @@ export default async function ArticlePage({ params }: Params) {
 
   const settings = await getSettings();
   await incrementArticleView(a.id);
+  const comments = await getApprovedComments(a.id);
   const showViews = settings?.show_view_counts !== false;
 
   const cover = storageUrl("article-images", a.cover_image);
@@ -94,6 +96,8 @@ export default async function ArticlePage({ params }: Params) {
           <span className="text-sm text-muted">Share this piece</span>
           <ShareMenu url={`/articles/${a.slug}`} text={a.title} compact />
         </div>
+
+        <Comments articleId={a.id} initial={comments} />
       </div>
     </article>
   );

@@ -12,7 +12,10 @@ import {
   Download,
   Share2,
   Mail,
+  MessageSquare,
   Users,
+  UserPlus,
+  Send,
   Settings,
   Menu as MenuIcon,
   LogOut,
@@ -29,9 +32,12 @@ const LINKS = [
   { href: "/admin/downloads", label: "Downloads", icon: Download },
   { href: "/admin/social", label: "Social links", icon: Share2 },
   { href: "/admin/contacts", label: "Inbox", icon: Mail },
+  { href: "/admin/comments", label: "Comments", icon: MessageSquare },
   { href: "/admin/subscribers", label: "Subscribers", icon: Users },
+  { href: "/admin/newsletter", label: "Newsletter", icon: Send },
   { href: "/admin/settings", label: "Settings", icon: Settings },
   { href: "/admin/menu", label: "Menu", icon: MenuIcon },
+  { href: "/admin/team", label: "Team logins", icon: UserPlus },
   { href: "/admin/security", label: "Security (2FA)", icon: Lock },
 ];
 

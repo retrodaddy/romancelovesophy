@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { deleteArticle } from "@/app/admin/actions";
+import { deleteArticle, toggleArticleStatus } from "@/app/admin/actions";
 import { PageHeader } from "@/components/admin/ui";
 import { ConfirmSubmit } from "@/components/admin/confirm-submit";
 import { createClient } from "@/lib/supabase/server";
@@ -49,12 +49,24 @@ export default async function AdminArticles() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <a
+                  href={`/admin/articles/${a.id}/preview`}
+                  target="_blank"
+                  className="rounded-md border border-line px-3 py-1.5 text-xs text-muted transition hover:text-[var(--fg)]"
+                >
+                  Preview
+                </a>
                 <Link
                   href={`/admin/articles/${a.id}`}
                   className="rounded-md border border-line px-3 py-1.5 text-xs text-muted transition hover:text-[var(--fg)]"
                 >
                   Edit
                 </Link>
+                <form action={toggleArticleStatus.bind(null, a.id, a.status !== "published")}>
+                  <button className="rounded-md border border-line px-3 py-1.5 text-xs text-muted transition hover:text-[var(--fg)]">
+                    {a.status === "published" ? "Pause" : "Go live"}
+                  </button>
+                </form>
                 <form action={deleteArticle.bind(null, a.id)}>
                   <ConfirmSubmit confirmText="Delete this article?">Delete</ConfirmSubmit>
                 </form>

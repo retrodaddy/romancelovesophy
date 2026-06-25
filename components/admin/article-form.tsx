@@ -75,6 +75,16 @@ export function ArticleForm({
           </Field>
         </div>
 
+        {article && (
+          <a
+            href={`/admin/articles/${article.id}/preview`}
+            target="_blank"
+            className="block rounded-md border border-line px-4 py-2.5 text-center text-sm text-muted transition hover:text-[var(--fg)]"
+          >
+            Open full preview (new tab)
+          </a>
+        )}
+
         <div className="flex gap-3">
           <button
             type="submit"

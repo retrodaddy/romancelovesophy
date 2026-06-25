@@ -20,6 +20,15 @@ function WhatsApp({ className }: { className?: string }) {
   );
 }
 
+function trackShare(ref: string) {
+  try {
+    const body = JSON.stringify({ type: "share", ref });
+    const blob = new Blob([body], { type: "application/json" });
+    if (navigator.sendBeacon) navigator.sendBeacon("/api/event", blob);
+    else fetch("/api/event", { method: "POST", body, headers: { "Content-Type": "application/json" }, keepalive: true });
+  } catch {}
+}
+
 export function ShareMenu({
   url,
   text,
@@ -38,6 +47,7 @@ export function ShareMenu({
   async function copy() {
     try {
       await navigator.clipboard.writeText(fullUrl);
+      trackShare("copy");
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {}
@@ -57,6 +67,7 @@ export function ShareMenu({
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Share to ${t.label}`}
+          onClick={() => trackShare(t.key)}
           className="grid h-8 w-8 place-items-center rounded-md border border-line text-muted transition hover:border-[var(--fg)] hover:text-[var(--fg)]"
         >
           {t.key === "whatsapp" ? (

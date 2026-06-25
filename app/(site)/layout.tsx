@@ -17,7 +17,9 @@ export default async function SiteLayout({
     getSettings(),
   ]);
 
-  const nav = resolveNav(settings?.nav_items).filter((n) => n.visible);
+  const nav = resolveNav(settings?.nav_items)
+    .filter((n) => n.visible)
+    .filter((n) => n.href !== "/shorts" || settings?.shorts_enabled);
 
   const adsense =
     settings?.ads_enabled && settings.adsense_client ? settings.adsense_client : null;

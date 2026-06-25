@@ -1,13 +1,17 @@
 import { PageHeader } from "@/components/admin/ui";
 import { MfaSetup } from "@/components/admin/mfa-setup";
+import { AccountSettings } from "@/components/admin/account-settings";
+import { requireAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export default function SecurityPage() {
+export default async function SecurityPage() {
+  const { user } = await requireAdmin();
   return (
-    <div>
-      <PageHeader title="Security" desc="Two-factor authentication for your admin login." />
+    <div className="max-w-2xl">
+      <PageHeader title="Security & account" desc="Two-factor authentication and your login details." />
       <MfaSetup />
+      <AccountSettings currentEmail={user.email || ""} />
     </div>
   );
 }

@@ -1,3 +1,15 @@
+export type Comment = {
+  id: string;
+  article_id: string;
+  parent_id: string | null;
+  name: string;
+  body: string;
+  is_admin: boolean;
+  replied: boolean;
+  status: "pending" | "approved" | "hidden";
+  created_at: string;
+};
+
 export type NavItem = { href: string; label: string; visible: boolean };
 
 export type Category = {

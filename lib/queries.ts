@@ -92,3 +92,70 @@ export async function getDownloads(): Promise<DownloadFile[]> {
     .order("created_at", { ascending: false });
   return (data ?? []) as DownloadFile[];
 }
+
+export async function getApprovedComments(articleId: string) {
+  const sb = await createClient();
+  const { data } = await sb
+    .from("comments")
+    .select("*")
+    .eq("article_id", articleId)
+    .eq("status", "approved")
+    .order("created_at", { ascending: true });
+  return (data ?? []) as import("@/lib/types").Comment[];
+}
+
+export async function getAdminComments() {
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const sb = createAdminClient();
+  const { data } = await sb
+    .from("comments")
+    .select("*, articles(title, slug)")
+    .order("created_at", { ascending: false });
+  return (data ?? []) as (import("@/lib/types").Comment & { articles: { title: string; slug: string } | null })[];
+}
+
+export async function getCommentCounts() {
+  try {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const sb = createAdminClient();
+    const total = await sb.from("comments").select("*", { count: "exact", head: true });
+    const pending = await sb.from("comments").select("*", { count: "exact", head: true }).eq("status", "pending");
+    const unreplied = await sb
+      .from("comments")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "approved")
+      .eq("is_admin", false)
+      .eq("replied", false)
+      .is("parent_id", null);
+    return {
+      total: total.count ?? 0,
+      pending: pending.count ?? 0,
+      unreplied: unreplied.count ?? 0,
+    };
+  } catch {
+    return { total: 0, pending: 0, unreplied: 0 };
+  }
+}
+
+export async function getEventCounts() {
+  try {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const sb = createAdminClient();
+    const shares = await sb.from("events").select("*", { count: "exact", head: true }).eq("type", "share");
+    const { data: dl } = await sb.from("quotes").select("download_count");
+    const downloads = (dl ?? []).reduce((n: number, r: { download_count: number | null }) => n + (r.download_count ?? 0), 0);
+    return { shares: shares.count ?? 0, downloads };
+  } catch {
+    return { shares: 0, downloads: 0 };
+  }
+}
+
+export async function getTeamMembers() {
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const sb = createAdminClient();
+  const { data } = await sb
+    .from("profiles")
+    .select("id, email, name, is_owner, created_at")
+    .order("created_at", { ascending: true });
+  return (data ?? []) as { id: string; email: string; name: string | null; is_owner: boolean | null; created_at: string }[];
+}

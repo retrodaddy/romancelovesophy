@@ -313,3 +313,93 @@ export async function updateNav(formData: FormData) {
   revalidatePath("/");
   redirect("/admin/menu?saved=1");
 }
+
+// ---- Comments moderation ----
+export async function approveComment(id: string) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  await sb.from("comments").update({ status: "approved" }).eq("id", id);
+  revalidatePath("/admin/comments");
+}
+
+export async function hideComment(id: string) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  await sb.from("comments").update({ status: "hidden" }).eq("id", id);
+  revalidatePath("/admin/comments");
+}
+
+export async function deleteComment(id: string) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  await sb.from("comments").delete().eq("id", id);
+  revalidatePath("/admin/comments");
+}
+
+export async function markCommentReplied(id: string) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  await sb.from("comments").update({ replied: true }).eq("id", id);
+  revalidatePath("/admin/comments");
+}
+
+export async function replyToComment(formData: FormData) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const parentId = String(formData.get("parent_id") || "");
+  const articleId = String(formData.get("article_id") || "");
+  const body = String(formData.get("body") || "").trim();
+  const name = String(formData.get("author_name") || "Aswin").trim() || "Aswin";
+  if (!parentId || !articleId || !body) return;
+
+  await sb.from("comments").insert({
+    article_id: articleId,
+    parent_id: parentId,
+    name,
+    body,
+    is_admin: true,
+    status: "approved",
+  });
+  // mark the original comment as replied + ensure it's visible
+  await sb.from("comments").update({ replied: true, status: "approved" }).eq("id", parentId);
+  revalidatePath("/admin/comments");
+}
+
+export async function toggleArticleStatus(id: string, makeLive: boolean) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const patch: Record<string, unknown> = {
+    status: makeLive ? "published" : "draft",
+    updated_at: new Date().toISOString(),
+  };
+  if (makeLive) patch.published_at = new Date().toISOString();
+  await sb.from("articles").update(patch).eq("id", id);
+  revalidatePath("/articles");
+  revalidatePath("/admin/articles");
+}
+
+export async function sendNewsletter(formData: FormData) {
+  await requireAdmin();
+  const subject = String(formData.get("subject") || "").trim();
+  const body = String(formData.get("body") || "").trim();
+  if (!subject || !body) redirect("/admin/newsletter?error=empty");
+
+  const sb = createAdminClient();
+  const { data: subs } = await sb.from("subscribers").select("email").limit(100);
+  let sent = 0;
+  let skipped = false;
+  for (const s of subs ?? []) {
+    const r = await sendEmail({
+      to: (s as { email: string }).email,
+      subject,
+      html: basicHtml(
+        body,
+        "You’re receiving this because you subscribed at romancelovesophy.com."
+      ),
+    });
+    if (r.ok) sent++;
+    else if ("skipped" in r && r.skipped) skipped = true;
+  }
+  if (skipped && sent === 0) redirect("/admin/newsletter?error=notconfigured");
+  redirect(`/admin/newsletter?sent=${sent}`);
+}

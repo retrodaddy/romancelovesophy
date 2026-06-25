@@ -1,9 +1,12 @@
 import Image from "@tiptap/extension-image";
+import { ReactNodeViewRenderer } from "@tiptap/react";
+import { ImageNodeView } from "@/components/admin/image-node-view";
 
-// Extends the base image with a width (for resizing) and an alignment that can
-// float the image so article text wraps around it, magazine-style. Both render
-// into the inline style; Tiptap's mergeAttributes concatenates style strings,
-// so width + alignment combine cleanly.
+// Extends the base image with a width (resize) and an alignment that floats the
+// image so article text wraps around it, magazine-style. Both render into the
+// inline style; Tiptap's mergeAttributes concatenates style strings, so width +
+// alignment combine cleanly for the SAVED html. In the editor, a React node view
+// gives drag-to-resize handles and a remove button with live wrap.
 const ALIGN_STYLE: Record<string, string> = {
   left: "float:left;margin:0.3rem 1.6rem 1rem 0;",
   right: "float:right;margin:0.3rem 0 1rem 1.6rem;",
@@ -32,5 +35,8 @@ export const ResizableImage = Image.extend({
         },
       },
     };
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageNodeView);
   },
 });
