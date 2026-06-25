@@ -80,7 +80,7 @@ export function RichEditor({
       Color,
       FontFamily,
       FontSize,
-      ResizableImage.configure({ inline: false }),
+      ResizableImage.configure({ inline: true }),
       LinkExt.configure({ openOnClick: false }),
     ],
     content: initialHTML || "<p></p>",
@@ -97,7 +97,7 @@ export function RichEditor({
     fd.append("file", file);
     const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
     const data = await res.json();
-    if (data.url) editor?.chain().focus().setImage({ src: data.url }).run();
+    if (data.url) editor?.chain().focus().setImage({ src: data.url, align: "center", width: "70%" }).run();
     else alert(data.error || "Image upload failed. Please try again.");
   }
 
@@ -194,9 +194,9 @@ export function RichEditor({
         <div className="flex flex-wrap items-center gap-2 border-b border-line bg-[var(--card)] p-2 text-xs">
           <span className="text-muted">Photo:</span>
           <span className="flex items-center gap-1">
-            <Btn label="Wrap text left" on={() => setImg({ align: "left", width: "42%" })}><AlignLeft size={15} /></Btn>
+            <Btn label="Wrap text left" on={() => setImg({ align: "left", width: "45%" })}><AlignLeft size={15} /></Btn>
             <Btn label="Center" on={() => setImg({ align: "center", width: "70%" })}><AlignCenter size={15} /></Btn>
-            <Btn label="Wrap text right" on={() => setImg({ align: "right", width: "42%" })}><AlignRight size={15} /></Btn>
+            <Btn label="Wrap text right" on={() => setImg({ align: "right", width: "45%" })}><AlignRight size={15} /></Btn>
             <Btn label="Full width" on={() => setImg({ align: "full", width: "100%" })}><Maximize size={15} /></Btn>
           </span>
           <span className="mx-1 h-4 w-px bg-[var(--line)]" />
@@ -208,6 +208,9 @@ export function RichEditor({
         </div>
       )}
 
+      <p className="border-b border-line px-3 py-1.5 text-xs text-muted">
+        Tip: insert an image, then pick <b>Wrap left</b> or <b>Wrap right</b> and your text flows around it. Drag the corner dot to resize, or the image itself to move it. Press <b>Shift+Enter</b> for a line without a paragraph gap.
+      </p>
       <div className="p-4">
         {preview ? (
           <div>
