@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { updateSettings } from "@/app/admin/actions";
 import { PageHeader, Card, Field, inputCls } from "@/components/admin/ui";
-import { SubmitButton } from "@/components/admin/confirm-submit";
+import { PendingButton } from "@/components/admin/confirm-submit";
 import { getQuotes, getSettings } from "@/lib/queries";
 import { storageUrl } from "@/lib/storage";
 
@@ -27,7 +27,8 @@ function Toggle({
   );
 }
 
-export default async function SettingsPage() {
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
+  const saved = (await searchParams)?.saved === "1";
   const [settings, quotes] = await Promise.all([getSettings(), getQuotes(50)]);
   const portrait = storageUrl("portraits", settings?.portrait_path);
   const header = storageUrl("header", settings?.header_image);
@@ -35,6 +36,11 @@ export default async function SettingsPage() {
   return (
     <div className="max-w-2xl">
       <PageHeader title="Settings and banner" desc="Your photo, channel banner, sponsor, ads and integrations." />
+      {saved && (
+        <div className="mb-5 rounded-lg border border-green-600/40 bg-green-600/10 px-4 py-3 text-sm text-green-500">
+          Saved. Your changes are live on the site.
+        </div>
+      )}
 
       <form action={updateSettings} className="space-y-6">
         <Card>
@@ -163,7 +169,7 @@ export default async function SettingsPage() {
         </Card>
 
         <input type="hidden" name="about_md" value={settings?.about_md ?? ""} />
-        <SubmitButton>Save settings</SubmitButton>
+        <PendingButton>Save settings</PendingButton>
       </form>
     </div>
   );

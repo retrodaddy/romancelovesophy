@@ -87,7 +87,10 @@ export async function updateSettings(formData: FormData) {
 
   await sb.from("settings").update(patch).eq("id", 1);
   revalidatePath("/");
-  revalidatePath("/admin/settings");
+  revalidatePath("/quotes");
+  revalidatePath("/videos");
+  revalidatePath("/connect");
+  redirect("/admin/settings?saved=1");
 }
 
 export async function createQuote(formData: FormData) {
