@@ -2,6 +2,7 @@ import Image from "next/image";
 import { updateSettings } from "@/app/admin/actions";
 import { PageHeader, Card, Field, inputCls } from "@/components/admin/ui";
 import { PendingButton } from "@/components/admin/confirm-submit";
+import { BannerUploader } from "@/components/admin/banner-uploader";
 import { getQuotes, getSettings } from "@/lib/queries";
 import { storageUrl } from "@/lib/storage";
 
@@ -54,18 +55,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           <p className="mb-4 text-sm text-muted">
             Like a YouTube banner. No 5 MB limit, upload full quality. Recommended 2560x1440.
           </p>
-          {header && (
-            <div className="relative mb-4 aspect-[16/5] w-full overflow-hidden rounded-lg border border-line">
-              <Image src={header} alt="Current banner" fill className="object-cover" />
-            </div>
-          )}
-          <input type="file" name="header" accept="image/*" className="text-sm" />
-          <div className="mt-4">
-            <label className="mb-1.5 block text-sm text-muted">
-              Mobile focal point (slide to choose what stays centered on phones)
-            </label>
-            <input type="range" name="header_focus_x" min={0} max={100} defaultValue={settings?.header_focus_x ?? 50} className="w-full" />
-          </div>
+          <BannerUploader currentUrl={header} defaultFocus={settings?.header_focus_x ?? 50} />
         </Card>
 
         <Card>

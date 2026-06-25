@@ -1,3 +1,5 @@
+export type NavItem = { href: string; label: string; visible: boolean };
+
 export type Category = {
   id: string;
   name: string;
@@ -93,6 +95,7 @@ export type Settings = {
   videos_on_home: boolean | null;
   contact_subjects: string[] | null;
   site_live: boolean | null;
+  nav_items: NavItem[] | null;
 };
 
 export type Contact = {

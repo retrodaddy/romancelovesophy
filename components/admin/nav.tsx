@@ -14,6 +14,7 @@ import {
   Mail,
   Users,
   Settings,
+  Menu as MenuIcon,
   LogOut,
   ExternalLink,
 } from "lucide-react";
@@ -30,6 +31,7 @@ const LINKS = [
   { href: "/admin/contacts", label: "Inbox", icon: Mail },
   { href: "/admin/subscribers", label: "Subscribers", icon: Users },
   { href: "/admin/settings", label: "Settings", icon: Settings },
+  { href: "/admin/menu", label: "Menu", icon: MenuIcon },
   { href: "/admin/security", label: "Security (2FA)", icon: Lock },
 ];
 

@@ -5,18 +5,9 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import { SocialIcon } from "./icons";
-import type { SocialLink } from "@/lib/types";
+import type { SocialLink, NavItem } from "@/lib/types";
 
-const NAV = [
-  { href: "/", label: "Home" },
-  { href: "/quotes", label: "Quotes" },
-  { href: "/videos", label: "Videos" },
-  { href: "/articles", label: "Writings" },
-  { href: "/connect", label: "Connect" },
-  { href: "/contact", label: "Contact" },
-];
-
-export function Header({ social }: { social: SocialLink[] }) {
+export function Header({ social, nav }: { social: SocialLink[]; nav: NavItem[] }) {
   const [open, setOpen] = useState(false);
   const top = social.slice(0, 4);
 
@@ -28,7 +19,7 @@ export function Header({ social }: { social: SocialLink[] }) {
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex">
-          {NAV.map((n) => (
+          {nav.map((n) => (
             <Link
               key={n.href}
               href={n.href}
@@ -68,7 +59,7 @@ export function Header({ social }: { social: SocialLink[] }) {
       {open && (
         <nav className="border-t border-line md:hidden">
           <div className="container-x flex flex-col py-3">
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <Link
                 key={n.href}
                 href={n.href}

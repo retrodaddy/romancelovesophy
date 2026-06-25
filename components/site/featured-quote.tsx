@@ -7,7 +7,8 @@ import type { Quote } from "@/lib/types";
 
 // Brother's portrait sits above the featured quote, which is auto-pulled
 // from the latest uploaded quote (its caption/title shown in the serif
-// editorial format; the quote image is also linked).
+// editorial format; the quote image is also linked). The portrait shows
+// as a medium-big PORTRAIT rectangle (not a small circle).
 export function FeaturedQuote({
   quote,
   portraitUrl,
@@ -23,18 +24,18 @@ export function FeaturedQuote({
       <div className="container-x flex flex-col items-center py-20 text-center sm:py-24">
         {portraitUrl ? (
           <Reveal>
-            <div className="relative h-24 w-24 overflow-hidden rounded-full border border-line sm:h-28 sm:w-28">
+            <div className="relative h-52 w-40 overflow-hidden rounded-2xl border border-line shadow-lg sm:h-64 sm:w-52">
               <Image
                 src={portraitUrl}
                 alt="Portrait"
                 fill
-                sizes="112px"
+                sizes="(min-width: 640px) 208px, 160px"
                 className="object-cover"
               />
             </div>
           </Reveal>
         ) : (
-          <div className="grid h-24 w-24 place-items-center rounded-full border border-dashed border-line text-[10px] text-muted sm:h-28 sm:w-28">
+          <div className="grid h-52 w-40 place-items-center rounded-2xl border border-dashed border-line text-[11px] text-muted sm:h-64 sm:w-52">
             add photo
           </div>
         )}

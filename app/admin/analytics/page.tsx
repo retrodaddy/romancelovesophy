@@ -1,10 +1,13 @@
 import { PageHeader } from "@/components/admin/ui";
-import { getVisitStats, getArticleReads } from "@/lib/analytics";
+import { getVisitStats, getArticleReads, getReadHours } from "@/lib/analytics";
 
 export const dynamic = "force-dynamic";
 
 export default async function AnalyticsPage() {
-  const [visits, reads] = await Promise.all([getVisitStats(), getArticleReads()]);
+  const [visits, reads, time] = await Promise.all([getVisitStats(), getArticleReads(), getReadHours()]);
+
+  const fmtHours = (h: number) =>
+    h >= 1 ? `${h.toLocaleString(undefined, { maximumFractionDigits: 1 })} hrs` : `${Math.round(h * 60)} min`;
 
   const cards = [
     { label: "All time", value: visits.all },
@@ -27,6 +30,25 @@ export default async function AnalyticsPage() {
               <p className="mt-1 font-serif text-2xl">{c.value.toLocaleString()}</p>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-xl border border-line bg-card p-6">
+        <h2 className="mb-1 font-medium">Total Read Hours</h2>
+        <p className="mb-4 text-sm text-muted">How long visitors have actively spent on the site.</p>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-lg border border-line p-4">
+            <p className="text-xs text-muted">All time</p>
+            <p className="mt-1 font-serif text-2xl">{fmtHours(time.totalHours)}</p>
+          </div>
+          <div className="rounded-lg border border-line p-4">
+            <p className="text-xs text-muted">Last 7 days</p>
+            <p className="mt-1 font-serif text-2xl">{fmtHours(time.d7Hours)}</p>
+          </div>
+          <div className="rounded-lg border border-line p-4">
+            <p className="text-xs text-muted">Last 30 days</p>
+            <p className="mt-1 font-serif text-2xl">{fmtHours(time.d30Hours)}</p>
+          </div>
         </div>
       </div>
 

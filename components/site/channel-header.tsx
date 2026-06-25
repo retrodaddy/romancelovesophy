@@ -7,12 +7,18 @@ import type { Settings } from "@/lib/types";
 
 // Channel header banner (like a YouTube banner). Falls back to the text hero
 // until a banner image is uploaded from the admin. header_focus_x controls
-// the horizontal focal point used on narrow (mobile) screens.
+// the horizontal focal point used on narrow (mobile) screens. The headline
+// text is shown BELOW the banner so the image never covers it.
 export function ChannelHeader({ settings }: { settings: Settings | null }) {
   const img = storageUrl("header", settings?.header_image);
   if (!img) return <Hero settings={settings} />;
 
   const fx = settings?.header_focus_x ?? 50;
+  const eyebrow = settings?.hero_eyebrow || "Classical wisdom · Modern influence";
+  const headline = settings?.hero_headline || "Where love meets philosophy";
+  const sub =
+    settings?.hero_sub ||
+    "Quiet reflections on love, meaning, and the art of living — written, filmed, and collected.";
 
   return (
     <section className="container-x pt-6 pb-12">
@@ -27,7 +33,18 @@ export function ChannelHeader({ settings }: { settings: Settings | null }) {
           style={{ objectPosition: `${fx}% 50%` }}
         />
       </div>
-      <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+
+      <div className="mt-9 text-center">
+        <p className="eyebrow">{eyebrow}</p>
+        <h1 className="mx-auto mt-3 max-w-2xl font-serif text-3xl font-medium leading-[1.08] tracking-tight sm:text-5xl">
+          {headline}
+        </h1>
+        <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-muted">
+          {sub}
+        </p>
+      </div>
+
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/quotes"
           className="rounded-md border border-[var(--fg)] px-6 py-3 text-sm tracking-wide transition hover:bg-[var(--fg)] hover:text-[var(--bg)]"

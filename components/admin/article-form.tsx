@@ -45,9 +45,11 @@ export function ArticleForm({
               placeholder={slugify(title) || "auto-generated"}
               className={inputCls}
             />
+            <p className="mt-1 text-xs text-muted">The web address for this piece (e.g. /writings/on-love). Leave blank to build it from the title automatically.</p>
           </Field>
           <Field label="Excerpt">
             <textarea name="excerpt" defaultValue={article?.excerpt || ""} rows={3} className={`${inputCls} h-auto py-2`} />
+            <p className="mt-1 text-xs text-muted">A 1–2 sentence summary shown on the article cards and previews. Optional.</p>
           </Field>
           <Field label="Category">
             <select name="category_id" defaultValue={article?.category_id || ""} className={inputCls}>
@@ -56,6 +58,7 @@ export function ArticleForm({
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
+            <p className="mt-1 text-xs text-muted">Optional grouping (e.g. Philosophy). Manage these in the Categories tab. “None” is fine.</p>
           </Field>
           <Field label="Cover image">
             <input type="file" name="cover" accept="image/*" className="text-sm" />

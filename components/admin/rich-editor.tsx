@@ -2,13 +2,13 @@
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import ImageExt from "@tiptap/extension-image";
 import LinkExt from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import TextStyle from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import FontFamily from "@tiptap/extension-font-family";
 import { FontSize } from "@/lib/tiptap-fontsize";
+import { ResizableImage } from "@/lib/tiptap-image";
 import { useEffect, useRef, useState } from "react";
 import {
   Bold,
@@ -22,6 +22,12 @@ import {
   Link as LinkIcon,
   Image as ImageIcon,
   Upload,
+  Eye,
+  Pencil,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Maximize,
 } from "lucide-react";
 
 type Font = { name: string; url?: string };
@@ -47,6 +53,8 @@ export function RichEditor({
   const fileRef = useRef<HTMLInputElement>(null);
   const fontRef = useRef<HTMLInputElement>(null);
   const [fontList, setFontList] = useState<Font[]>([...BUILTINS, ...fonts]);
+  const [preview, setPreview] = useState(false);
+  const [previewHTML, setPreviewHTML] = useState(initialHTML);
 
   // inject @font-face for any uploaded fonts so they render in the editor
   useEffect(() => {
@@ -72,7 +80,7 @@ export function RichEditor({
       Color,
       FontFamily,
       FontSize,
-      ImageExt.configure({ inline: false }),
+      ResizableImage.configure({ inline: false }),
       LinkExt.configure({ openOnClick: false }),
     ],
     content: initialHTML || "<p></p>",
@@ -90,6 +98,7 @@ export function RichEditor({
     const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
     const data = await res.json();
     if (data.url) editor?.chain().focus().setImage({ src: data.url }).run();
+    else alert(data.error || "Image upload failed. Please try again.");
   }
 
   async function uploadFont(file: File) {
@@ -103,10 +112,15 @@ export function RichEditor({
     }
   }
 
+  const imageActive = editor.isActive("image");
+  const setImg = (attrs: Record<string, string>) =>
+    editor.chain().focus().updateAttributes("image", attrs).run();
+
   const Btn = ({ on, active, children, label }: { on: () => void; active?: boolean; children: React.ReactNode; label: string }) => (
     <button
       type="button"
       aria-label={label}
+      title={label}
       onClick={on}
       className={`grid h-8 w-8 place-items-center rounded transition ${active ? "bg-[var(--fg)] text-[var(--bg)]" : "text-muted hover:text-[var(--fg)]"}`}
     >
@@ -168,9 +182,41 @@ export function RichEditor({
         <Btn label="Insert image" on={() => fileRef.current?.click()}><ImageIcon size={15} /></Btn>
         <input ref={fileRef} type="file" accept="image/*" className="hidden"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.target.value = ""; }} />
+
+        <span className="ml-auto" />
+        <Btn label={preview ? "Back to editing" : "Preview"} on={() => { setPreviewHTML(editor.getHTML()); setPreview((p) => !p); }} active={preview}>
+          {preview ? <Pencil size={15} /> : <Eye size={15} />}
+        </Btn>
       </div>
+
+      {/* image toolbar — appears when an image is selected */}
+      {imageActive && !preview && (
+        <div className="flex flex-wrap items-center gap-2 border-b border-line bg-[var(--card)] p-2 text-xs">
+          <span className="text-muted">Photo:</span>
+          <span className="flex items-center gap-1">
+            <Btn label="Wrap text left" on={() => setImg({ align: "left", width: "42%" })}><AlignLeft size={15} /></Btn>
+            <Btn label="Center" on={() => setImg({ align: "center", width: "70%" })}><AlignCenter size={15} /></Btn>
+            <Btn label="Wrap text right" on={() => setImg({ align: "right", width: "42%" })}><AlignRight size={15} /></Btn>
+            <Btn label="Full width" on={() => setImg({ align: "full", width: "100%" })}><Maximize size={15} /></Btn>
+          </span>
+          <span className="mx-1 h-4 w-px bg-[var(--line)]" />
+          <span className="text-muted">Size:</span>
+          <button type="button" onClick={() => setImg({ width: "30%" })} className="rounded border border-line px-2 py-1 hover:text-[var(--fg)]">Small</button>
+          <button type="button" onClick={() => setImg({ width: "50%" })} className="rounded border border-line px-2 py-1 hover:text-[var(--fg)]">Medium</button>
+          <button type="button" onClick={() => setImg({ width: "75%" })} className="rounded border border-line px-2 py-1 hover:text-[var(--fg)]">Large</button>
+          <button type="button" onClick={() => setImg({ width: "100%" })} className="rounded border border-line px-2 py-1 hover:text-[var(--fg)]">Full</button>
+        </div>
+      )}
+
       <div className="p-4">
-        <EditorContent editor={editor} />
+        {preview ? (
+          <div>
+            <p className="mb-4 text-xs uppercase tracking-widest text-muted">Preview — how it looks on the site</p>
+            <div className="prose-editorial" dangerouslySetInnerHTML={{ __html: previewHTML }} />
+          </div>
+        ) : (
+          <EditorContent editor={editor} />
+        )}
       </div>
     </div>
   );

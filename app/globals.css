@@ -70,7 +70,8 @@
   padding-left: 1.25rem;
   margin: 1.8rem 0;
 }
-.prose-editorial img { border-radius: 8px; margin: 1.8rem 0; }
+.prose-editorial img { border-radius: 8px; margin: 1.8rem 0; max-width: 100%; height: auto; }
+.prose-editorial::after { content: ""; display: block; clear: both; }
 .prose-editorial a { text-decoration: underline; text-underline-offset: 3px; }
 .prose-editorial ul { list-style: disc; padding-left: 1.4rem; }
 .prose-editorial ol { list-style: decimal; padding-left: 1.4rem; }
@@ -95,4 +96,11 @@
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Dropdown menus: always readable (white background, dark text) in all browsers/modes */
+select option,
+select optgroup {
+  background-color: #ffffff;
+  color: #111111;
 }

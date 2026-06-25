@@ -286,3 +286,30 @@ export async function markContactRead(id: string) {
   await sb.from("contacts").update({ is_read: true }).eq("id", id);
   revalidatePath("/admin/contacts");
 }
+
+export async function updateNav(formData: FormData) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  let parsed: { href: string; label?: string; visible?: boolean }[] = [];
+  try {
+    parsed = JSON.parse(String(formData.get("nav_json") || "[]"));
+  } catch {
+    parsed = [];
+  }
+  const { resolveNav } = await import("@/lib/nav");
+  const nav_items = resolveNav(parsed);
+
+  const { data: upd, error } = await sb
+    .from("settings")
+    .update({ nav_items, updated_at: new Date().toISOString() })
+    .eq("id", 1)
+    .select("id");
+  if (error) throw new Error("Save failed: " + error.message);
+  if (!upd || upd.length === 0) {
+    throw new Error(
+      "Save was blocked by the database. In Vercel, check SUPABASE_SERVICE_ROLE_KEY, then redeploy."
+    );
+  }
+  revalidatePath("/");
+  redirect("/admin/menu?saved=1");
+}

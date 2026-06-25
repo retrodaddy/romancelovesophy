@@ -40,3 +40,26 @@ export async function incrementArticleView(id: string) {
     /* ignore */
   }
 }
+
+// Total time visitors have spent on the site (sum of heartbeat seconds).
+export async function getReadHours() {
+  try {
+    const sb = createAdminClient();
+    const sumSince = async (days?: number) => {
+      let q = sb.from("read_time").select("seconds");
+      if (days) q = q.gte("created_at", new Date(Date.now() - days * 86_400_000).toISOString());
+      const { data } = await q;
+      const secs = (data ?? []).reduce((s: number, r: { seconds: number | null }) => s + (r.seconds ?? 0), 0);
+      return secs;
+    };
+    const [allSecs, d7Secs, d30Secs] = await Promise.all([sumSince(), sumSince(7), sumSince(30)]);
+    return {
+      totalHours: allSecs / 3600,
+      d7Hours: d7Secs / 3600,
+      d30Hours: d30Secs / 3600,
+      totalSeconds: allSecs,
+    };
+  } catch {
+    return { totalHours: 0, d7Hours: 0, d30Hours: 0, totalSeconds: 0 };
+  }
+}
