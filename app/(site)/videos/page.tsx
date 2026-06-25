@@ -5,7 +5,7 @@ import { VideoGallery } from "@/components/site/video-gallery";
 import { getSettings } from "@/lib/queries";
 import { getLatestVideos } from "@/lib/youtube";
 
-export const revalidate = 1800;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Videos",

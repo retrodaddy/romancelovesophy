@@ -17,7 +17,7 @@ import {
 import { getLatestVideos } from "@/lib/youtube";
 import { storageUrl } from "@/lib/supabase/admin";
 
-export const revalidate = 1800; // 30 min ISR
+export const dynamic = "force-dynamic"; // 30 min ISR
 
 export default async function HomePage() {
   const settings = await getSettings();

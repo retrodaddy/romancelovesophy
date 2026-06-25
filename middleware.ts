@@ -12,7 +12,7 @@ async function isSiteLive(): Promise<boolean> {
     });
     const data = await res.json();
     const val = !!(Array.isArray(data) && data[0] && data[0].site_live);
-    liveCache = { val, exp: Date.now() + 20000 };
+    liveCache = { val, exp: Date.now() + 6000 };
     return val;
   } catch {
     return liveCache.exp ? liveCache.val : false;

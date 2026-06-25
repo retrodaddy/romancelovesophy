@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ArticleCard } from "@/components/site/article-card";
 import { getArticles, getSettings } from "@/lib/queries";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Articles",

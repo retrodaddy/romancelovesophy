@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { QuoteGallery } from "@/components/site/quote-gallery";
 import { getQuotes, getSettings } from "@/lib/queries";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Quote gallery",
