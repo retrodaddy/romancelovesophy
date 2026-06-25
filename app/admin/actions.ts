@@ -76,6 +76,7 @@ export async function updateSettings(formData: FormData) {
     videos_on_home: bool("videos_on_home"),
     allowed_tags: tags,
     contact_subjects,
+    site_live: bool("site_live"),
     updated_at: new Date().toISOString(),
   };
 

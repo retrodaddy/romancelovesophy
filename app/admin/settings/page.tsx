@@ -38,6 +38,12 @@ export default async function SettingsPage() {
 
       <form action={updateSettings} className="space-y-6">
         <Card>
+          <h2 className="mb-2 font-medium">Site visibility</h2>
+          <p className="mb-3 text-sm text-muted">When OFF, visitors see a "Coming soon" page while you edit privately (you can still log in and preview). Turn ON to go public.</p>
+          <Toggle name="site_live" label="Site is LIVE to the public" on={settings?.site_live} />
+        </Card>
+
+        <Card>
           <h2 className="mb-2 font-medium">Channel header image</h2>
           <p className="mb-4 text-sm text-muted">
             Like a YouTube banner. No 5 MB limit, upload full quality. Recommended 2560x1440.

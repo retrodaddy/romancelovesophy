@@ -92,6 +92,7 @@ export type Settings = {
   shorts_enabled: boolean | null;
   videos_on_home: boolean | null;
   contact_subjects: string[] | null;
+  site_live: boolean | null;
 };
 
 export type Contact = {

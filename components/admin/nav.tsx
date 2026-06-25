@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   BarChart3,
+  Lock,
   Quote,
   FileText,
   Tags,
@@ -29,6 +30,7 @@ const LINKS = [
   { href: "/admin/contacts", label: "Inbox", icon: Mail },
   { href: "/admin/subscribers", label: "Subscribers", icon: Users },
   { href: "/admin/settings", label: "Settings", icon: Settings },
+  { href: "/admin/security", label: "Security (2FA)", icon: Lock },
 ];
 
 export function AdminNav() {
