@@ -138,6 +138,8 @@ export type VideoItem = {
   description: string | null;
   thumbnail: string | null;
   published_at: string | null;
+  duration_seconds?: number | null;
+  is_short?: boolean | null;
 };
 
 export type SpotifyEpisode = {

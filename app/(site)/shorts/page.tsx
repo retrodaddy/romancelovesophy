@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ShortsFeed } from "@/components/site/shorts-feed";
 import { getSettings } from "@/lib/queries";
-import { getLatestVideos } from "@/lib/youtube";
+import { getChannelVideos } from "@/lib/youtube";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +10,10 @@ export const metadata: Metadata = {
   description: "Short, vertical reflections from Romancelovesophy.",
 };
 
-export default async function ShortsPage() {
+export default async function ShortsPage({ searchParams }: { searchParams: Promise<{ start?: string }> }) {
+  const { start } = await searchParams;
   const settings = await getSettings();
-  const videos = await getLatestVideos(settings?.youtube_channel_id ?? null, 24);
-  return <ShortsFeed videos={videos} />;
+  const { shorts } = await getChannelVideos(settings?.youtube_channel_id ?? null);
+  const idx = start ? shorts.findIndex((v) => v.id === start) : 0;
+  return <ShortsFeed videos={shorts} startIndex={idx < 0 ? 0 : idx} />;
 }
