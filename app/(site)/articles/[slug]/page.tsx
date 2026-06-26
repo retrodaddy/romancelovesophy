@@ -97,7 +97,7 @@ export default async function ArticlePage({ params }: Params) {
           <ShareMenu url={`/articles/${a.slug}`} text={a.title} compact />
         </div>
 
-        <Comments articleId={a.id} initial={comments} />
+        <Comments articleId={a.id} initial={comments} enabled={settings?.comments_enabled !== false} />
       </div>
     </article>
   );

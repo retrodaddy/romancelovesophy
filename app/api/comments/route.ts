@@ -20,6 +20,13 @@ export async function POST(req: Request) {
     }
 
     const sb = createAdminClient();
+
+    // respect the global comments on/off switch
+    const { data: setting } = await sb.from("settings").select("comments_enabled").eq("id", 1).maybeSingle();
+    if (setting && setting.comments_enabled === false) {
+      return NextResponse.json({ error: "Comments are closed." }, { status: 403 });
+    }
+
     // verify the article exists (and get id)
     const { data: art } = await sb.from("articles").select("id").eq("id", article_id).maybeSingle();
     if (!art) return NextResponse.json({ error: "Article not found." }, { status: 404 });

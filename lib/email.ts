@@ -35,7 +35,7 @@ export async function sendEmail({ to, subject, html, replyTo, headers }: SendArg
 export function threadReplyAddress(contactId: string): string | undefined {
   const domain = process.env.CONTACT_REPLY_DOMAIN;
   if (!domain) return undefined;
-  return `reply+${contactId}@${domain}`;
+  return `c-${contactId}@${domain}`;
 }
 
 export function basicHtml(body: string, footer?: string): string {

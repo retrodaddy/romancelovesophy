@@ -108,6 +108,7 @@ export type Settings = {
   contact_subjects: string[] | null;
   site_live: boolean | null;
   nav_items: NavItem[] | null;
+  comments_enabled: boolean | null;
 };
 
 export type Contact = {

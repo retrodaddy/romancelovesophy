@@ -1,14 +1,15 @@
 import { PageHeader } from "@/components/admin/ui";
 import { ConfirmSubmit } from "@/components/admin/confirm-submit";
 import { CommentReply } from "@/components/admin/comment-reply";
-import { approveComment, hideComment, deleteComment, markCommentReplied } from "@/app/admin/actions";
-import { getAdminComments } from "@/lib/queries";
+import { approveComment, hideComment, deleteComment, markCommentReplied, setCommentsEnabled } from "@/app/admin/actions";
+import { getAdminComments, getSettings } from "@/lib/queries";
 import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminComments() {
-  const comments = await getAdminComments();
+  const [comments, settings] = await Promise.all([getAdminComments(), getSettings()]);
+  const open = settings?.comments_enabled !== false;
   const pending = comments.filter((c) => c.status === "pending");
   const live = comments.filter((c) => c.status === "approved");
   const hidden = comments.filter((c) => c.status === "hidden");
@@ -60,6 +61,22 @@ export default async function AdminComments() {
   return (
     <div className="max-w-3xl">
       <PageHeader title="Comments" desc="Approve, reply to, hide or delete comments on your writings." />
+
+      <div className="mb-8 flex items-center justify-between rounded-xl border border-line bg-card p-5">
+        <div>
+          <p className="font-medium">Comments are {open ? "OPEN" : "CLOSED"} for all writings</p>
+          <p className="mt-1 text-sm text-muted">
+            {open
+              ? "Visitors can post comments (still held for your approval). Turn off to close comments on every writing."
+              : "The comment box is hidden on every writing. Existing comments still show. Turn on to reopen."}
+          </p>
+        </div>
+        <form action={setCommentsEnabled.bind(null, !open)}>
+          <button className={`rounded-md border px-4 py-2 text-sm transition ${open ? "border-line text-muted hover:text-[var(--fg)]" : "border-[var(--fg)] hover:bg-[var(--fg)] hover:text-[var(--bg)]"}`}>
+            {open ? "Close comments" : "Open comments"}
+          </button>
+        </form>
+      </div>
 
       <h2 className="mb-1 text-sm font-medium">Awaiting approval ({pending.length})</h2>
       <div className="divide-y divide-[var(--line)] border-y border-line">

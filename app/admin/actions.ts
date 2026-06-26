@@ -270,7 +270,7 @@ export async function sendContactReply(formData: FormData) {
     to: contact.email,
     subject,
     html: basicHtml(body, "Reply to this email to continue the conversation with Aswin."),
-    replyTo: threadReplyAddress(id),
+    replyTo: threadReplyAddress(id) || process.env.CONTACT_OWNER_EMAIL || undefined,
   });
 
   await sb.from("contact_messages").insert({ contact_id: id, direction: "outbound", body, email_id: sent?.id ?? null });
@@ -396,10 +396,20 @@ export async function sendNewsletter(formData: FormData) {
         body,
         "You’re receiving this because you subscribed at romancelovesophy.com."
       ),
+      replyTo: process.env.CONTACT_OWNER_EMAIL || undefined,
     });
     if (r.ok) sent++;
     else if ("skipped" in r && r.skipped) skipped = true;
   }
   if (skipped && sent === 0) redirect("/admin/newsletter?error=notconfigured");
   redirect(`/admin/newsletter?sent=${sent}`);
+}
+
+export async function setCommentsEnabled(enabled: boolean) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  await sb.from("settings").update({ comments_enabled: enabled, updated_at: new Date().toISOString() }).eq("id", 1);
+  revalidatePath("/");
+  revalidatePath("/articles");
+  revalidatePath("/admin/comments");
 }

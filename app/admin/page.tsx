@@ -69,7 +69,6 @@ export default async function AdminHome() {
         <div className="mt-4 flex flex-wrap gap-3">
           <Action href="/admin/quotes" label="Upload a quote" />
           <Action href="/admin/articles/new" label="Write a writing" />
-          <Action href="/admin/newsletter" label="Send a newsletter" />
           <Action href="/admin/settings" label="Update homepage & photo" />
           <Action href="/admin/menu" label="Edit menu" />
         </div>

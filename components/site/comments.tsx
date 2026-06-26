@@ -108,7 +108,7 @@ function CommentRow({ c, articleId }: { c: Comment; articleId: string }) {
   );
 }
 
-export function Comments({ articleId, initial }: { articleId: string; initial: Comment[] }) {
+export function Comments({ articleId, initial, enabled = true }: { articleId: string; initial: Comment[]; enabled?: boolean }) {
   const threads = threadComments(initial);
 
   return (
@@ -118,9 +118,15 @@ export function Comments({ articleId, initial }: { articleId: string; initial: C
         Be kind and thoughtful. Comments appear after a quick review. Emojis welcome; links aren’t allowed.
       </p>
 
-      <div className="mt-6 rounded-xl border border-line bg-card p-5">
-        <CommentForm articleId={articleId} />
-      </div>
+      {enabled ? (
+        <div className="mt-6 rounded-xl border border-line bg-card p-5">
+          <CommentForm articleId={articleId} />
+        </div>
+      ) : (
+        <p className="mt-6 rounded-xl border border-line bg-card p-5 text-sm text-muted">
+          Comments are closed.
+        </p>
+      )}
 
       <div className="mt-8 divide-y divide-[var(--line)]">
         {threads.length === 0 && <p className="py-4 text-sm text-muted">No comments yet. Be the first to share a thought.</p>}

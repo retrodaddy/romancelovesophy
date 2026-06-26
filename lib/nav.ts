@@ -9,7 +9,6 @@ export const DEFAULT_NAV: NavItem[] = [
   { href: "/shorts", label: "Shorts", visible: true },
   { href: "/articles", label: "Writings", visible: true },
   { href: "/connect", label: "Connect", visible: true },
-  { href: "/contact", label: "Contact", visible: true },
 ];
 
 // Merge saved menu config with the known routes: keep saved order + labels +
