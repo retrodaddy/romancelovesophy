@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { VideoItem } from "@/lib/types";
 
 const API = "https://www.googleapis.com/youtube/v3";
-const SHORT_MAX_SECONDS = 90;       // a video <= this is treated as a Short
+const SHORT_MAX_SECONDS = 180;      // a video <= this (3 min) is treated as a Short
 const SYNC_TTL_MS = 60 * 60 * 1000; // refresh the cache at most once an hour
 const MAX_PAGES = 12;               // up to ~600 videos of history
 
@@ -147,15 +147,20 @@ export async function getChannelVideos(
   channelId: string | null
 ): Promise<{ long: VideoItem[]; shorts: VideoItem[]; all: VideoItem[] }> {
   let all = await readCache();
-  if (all.length === 0 || (await isStale())) {
+  if (all.length === 0) {
+    // first ever load — must populate once
     const id = await resolveId(channelId);
     if (id) {
       await syncAllVideos(id);
       all = await readCache();
     }
   }
-  const shorts = all.filter((v) => v.is_short);
-  const long = all.filter((v) => !v.is_short);
+  const isShort = (v: VideoItem) => {
+    const d = v.duration_seconds ?? 0;
+    return d > 0 && d <= SHORT_MAX_SECONDS;
+  };
+  const shorts = all.filter(isShort);
+  const long = all.filter((v) => !isShort(v));
   return { long, shorts, all };
 }
 
@@ -163,4 +168,17 @@ export async function getChannelVideos(
 export async function getLatestVideos(channelId: string | null, max = 12): Promise<VideoItem[]> {
   const { all } = await getChannelVideos(channelId);
   return all.slice(0, max);
+}
+
+
+// Refresh the cache only if it's older than the TTL. Meant to be called from a
+// page's after() hook so it never blocks rendering.
+export async function refreshIfStale(channelId: string | null): Promise<void> {
+  try {
+    if (!(await isStale())) return;
+    const id = await resolveId(channelId);
+    if (id) await syncAllVideos(id);
+  } catch {
+    /* ignore */
+  }
 }

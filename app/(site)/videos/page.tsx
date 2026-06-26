@@ -1,55 +1,44 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Youtube, Play } from "lucide-react";
+import { after } from "next/server";
+import { Youtube, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { getSettings } from "@/lib/queries";
-import { getChannelVideos } from "@/lib/youtube";
+import { getChannelVideos, refreshIfStale } from "@/lib/youtube";
 import { relativeDate } from "@/lib/utils";
-import type { VideoItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 const PER = 12;
 
 export const metadata: Metadata = {
   title: "Videos",
-  description: "Every film and short from the Romancelovesophy YouTube channel.",
+  description: "Every film and reflection from the Romancelovesophy YouTube channel.",
 };
 
-function Pager({ current, total, param, other }: { current: number; total: number; param: string; other: string }) {
-  if (total <= 1) return null;
-  const pages = Array.from({ length: total }, (_, i) => i + 1);
-  return (
-    <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-      {pages.map((n) => (
-        <Link
-          key={n}
-          href={`/videos?${param}=${n}${other}#${param === "vp" ? "videos" : "shorts"}`}
-          className={`grid h-9 min-w-9 place-items-center rounded-md border px-3 text-sm transition ${
-            n === current ? "border-[var(--fg)] bg-[var(--fg)] text-[var(--bg)]" : "border-line text-muted hover:text-[var(--fg)]"
-          }`}
-        >
-          {n}
-        </Link>
-      ))}
-    </div>
-  );
+// Windowed page list: 1 … 4 5 6 … 20
+function pageList(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const out: (number | "…")[] = [1];
+  if (current > 3) out.push("…");
+  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) out.push(i);
+  if (current < total - 2) out.push("…");
+  out.push(total);
+  return out;
 }
 
-export default async function VideosPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ vp?: string; sp?: string }>;
-}) {
-  const sp = await searchParams;
+export default async function VideosPage({ searchParams }: { searchParams: Promise<{ p?: string }> }) {
   const settings = await getSettings();
-  const { long, shorts } = await getChannelVideos(settings?.youtube_channel_id ?? null);
+  const channelId = settings?.youtube_channel_id ?? null;
+  const { all } = await getChannelVideos(channelId);
 
-  const vp = Math.max(1, Number(sp.vp) || 1);
-  const spg = Math.max(1, Number(sp.sp) || 1);
-  const longPages = Math.max(1, Math.ceil(long.length / PER));
-  const shortPages = Math.max(1, Math.ceil(shorts.length / PER));
-  const longSlice = long.slice((vp - 1) * PER, vp * PER);
-  const shortSlice = shorts.slice((spg - 1) * PER, spg * PER);
+  // refresh in the background so the page itself always loads instantly
+  after(async () => {
+    await refreshIfStale(channelId);
+  });
+
+  const total = Math.max(1, Math.ceil(all.length / PER));
+  const p = Math.min(total, Math.max(1, Number((await searchParams).p) || 1));
+  const slice = all.slice((p - 1) * PER, p * PER);
 
   return (
     <div className="container-x py-16 sm:py-24">
@@ -57,7 +46,7 @@ export default async function VideosPage({
         <p className="eyebrow">Curated films</p>
         <h1 className="mt-4 font-serif text-4xl font-medium sm:text-5xl">Videos</h1>
         <p className="mx-auto mt-4 max-w-md text-sm text-muted">
-          The full channel — long-form films and quick shorts. New uploads appear here automatically.
+          The full channel, newest first. New uploads appear here automatically.
         </p>
         <a
           href="https://www.youtube.com/@Romancelovesophy?sub_confirmation=1"
@@ -69,18 +58,12 @@ export default async function VideosPage({
         </a>
       </div>
 
-      {long.length === 0 && shorts.length === 0 && (
-        <p className="text-center text-sm text-muted">
-          Videos will appear here automatically once the channel finishes syncing.
-        </p>
-      )}
-
-      {/* LONG-FORM */}
-      {long.length > 0 && (
-        <section id="videos" className="scroll-mt-24">
-          <h2 className="mb-5 font-serif text-2xl">Films</h2>
+      {all.length === 0 ? (
+        <p className="text-center text-sm text-muted">Videos will appear here shortly.</p>
+      ) : (
+        <>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {longSlice.map((v) => (
+            {slice.map((v) => (
               <Link key={v.id} href={`/videos/${v.id}`} className="group text-left">
                 <div className="relative aspect-video overflow-hidden rounded-lg border border-line bg-card">
                   {v.thumbnail && (
@@ -95,33 +78,40 @@ export default async function VideosPage({
               </Link>
             ))}
           </div>
-          <Pager current={vp} total={longPages} param="vp" other={`&sp=${spg}`} />
-        </section>
-      )}
 
-      {/* SHORTS */}
-      {shorts.length > 0 && (
-        <section id="shorts" className="mt-20 scroll-mt-24">
-          <h2 className="mb-1 font-serif text-2xl">Shorts</h2>
-          <p className="mb-5 text-sm text-muted">Tap any short to open the full-screen player and scroll through them.</p>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            {shortSlice.map((v: VideoItem) => (
-              <Link key={v.id} href={`/shorts?start=${v.id}`} className="group">
-                <div className="relative aspect-[9/16] overflow-hidden rounded-lg border border-line bg-card">
-                  {v.thumbnail && (
-                    <Image src={v.thumbnail} alt={v.title} fill sizes="(max-width:640px) 50vw, 16vw" className="object-cover transition duration-700 group-hover:scale-105" />
-                  )}
-                  <div className="absolute inset-0 grid place-items-center bg-black/15 opacity-0 transition group-hover:opacity-100">
-                    <span className="grid h-10 w-10 place-items-center rounded-full bg-white/90 text-black"><Play size={16} className="ml-0.5" /></span>
-                  </div>
-                </div>
-                <h3 className="mt-2 line-clamp-2 text-xs leading-snug">{v.title}</h3>
-              </Link>
-            ))}
-          </div>
-          <Pager current={spg} total={shortPages} param="sp" other={`&vp=${vp}`} />
-        </section>
+          {total > 1 && (
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
+              <PagerLink to={p - 1} disabled={p === 1} label="Previous"><ChevronLeft size={16} /></PagerLink>
+              {pageList(p, total).map((n, i) =>
+                n === "…" ? (
+                  <span key={`e${i}`} className="px-1 text-muted">…</span>
+                ) : (
+                  <Link
+                    key={n}
+                    href={`/videos?p=${n}`}
+                    className={`grid h-9 min-w-9 place-items-center rounded-md border px-3 text-sm transition ${
+                      n === p ? "border-[var(--fg)] bg-[var(--fg)] text-[var(--bg)]" : "border-line text-muted hover:text-[var(--fg)]"
+                    }`}
+                  >
+                    {n}
+                  </Link>
+                )
+              )}
+              <PagerLink to={p + 1} disabled={p === total} label="Next"><ChevronRight size={16} /></PagerLink>
+            </div>
+          )}
+        </>
       )}
     </div>
+  );
+}
+
+function PagerLink({ to, disabled, label, children }: { to: number; disabled: boolean; label: string; children: React.ReactNode }) {
+  if (disabled)
+    return <span aria-label={label} className="grid h-9 w-9 place-items-center rounded-md border border-line text-muted/40">{children}</span>;
+  return (
+    <Link href={`/videos?p=${to}`} aria-label={label} className="grid h-9 w-9 place-items-center rounded-md border border-line text-muted transition hover:text-[var(--fg)]">
+      {children}
+    </Link>
   );
 }

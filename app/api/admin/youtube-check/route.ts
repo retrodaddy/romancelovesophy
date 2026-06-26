@@ -72,6 +72,25 @@ async function run() {
       out.videos_found = (pj.items || []).length;
       out.sample_titles = (pj.items || []).map((i: { snippet?: { title?: string } }) => i.snippet?.title).filter(Boolean);
     }
+    // cache stats — shows whether lengths were stored and how the split lands
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const dbsb = createAdminClient();
+      const { data: cache } = await dbsb.from("videos_cache").select("duration_seconds");
+      const rows = (cache ?? []) as { duration_seconds: number | null }[];
+      const withDur = rows.filter((r) => (r.duration_seconds ?? 0) > 0);
+      out.cache_total = rows.length;
+      out.cache_with_duration = withDur.length;
+      out.cache_shorts_le_180s = withDur.filter((r) => (r.duration_seconds as number) <= 180).length;
+      out.cache_shorts_le_90s = withDur.filter((r) => (r.duration_seconds as number) <= 90).length;
+      out.cache_sample_durations = rows.slice(0, 12).map((r) => r.duration_seconds);
+      if (rows.length > 0 && withDur.length === 0) {
+        out.cache_warning = "No lengths stored — run ROUND5-SETUP.sql in Supabase (adds duration_seconds + is_short columns), then reload /videos.";
+      }
+    } catch (e) {
+      out.cache_stats_error = String(e);
+    }
+
     out.diagnosis = out.videos_found ? "Working! Videos are reachable. If the page is still empty, hard-refresh it." : "Channel found but no uploads returned.";
   } catch (e) {
     out.exception = String(e);

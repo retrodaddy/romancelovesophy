@@ -3,7 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { getSettings } from "@/lib/queries";
-import { getChannelVideos } from "@/lib/youtube";
+import { after } from "next/server";
+import { getChannelVideos, refreshIfStale } from "@/lib/youtube";
 import { relativeDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -19,9 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function WatchPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const settings = await getSettings();
-  const { long, all } = await getChannelVideos(settings?.youtube_channel_id ?? null);
+  const channelId = settings?.youtube_channel_id ?? null;
+  const { all } = await getChannelVideos(channelId);
+  after(async () => {
+    await refreshIfStale(channelId);
+  });
   const current = all.find((v) => v.id === id);
-  const upNext = long.filter((v) => v.id !== id).slice(0, 14);
+  const upNext = all.filter((v) => v.id !== id).slice(0, 14);
 
   return (
     <div className="container-x py-10 sm:py-14">
