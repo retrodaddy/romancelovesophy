@@ -1,11 +1,45 @@
 "use client";
 
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import { saveArticle } from "@/app/admin/actions";
 import { RichEditor } from "./rich-editor";
 import { inputCls, Field } from "@/components/admin/ui";
-import { slugify } from "@/lib/utils";
+import { slugify, toDatetimeLocalValue } from "@/lib/utils";
 import type { Article, Category } from "@/lib/types";
+
+// Disables both buttons and labels the one clicked while the server action
+// (which can include a cover-image upload) is in flight, so a slow save
+// never looks like nothing happened.
+function ArticleSaveButtons() {
+  const { pending } = useFormStatus();
+  const [clicked, setClicked] = useState<"draft" | "published" | null>(null);
+
+  return (
+    <div className="flex gap-3">
+      <button
+        type="submit"
+        name="status"
+        value="draft"
+        disabled={pending}
+        onClick={() => setClicked("draft")}
+        className="flex-1 rounded-md border border-line px-4 py-2.5 text-sm text-muted transition hover:text-[var(--fg)] disabled:opacity-60"
+      >
+        {pending && clicked === "draft" ? "Saving…" : "Save draft"}
+      </button>
+      <button
+        type="submit"
+        name="status"
+        value="published"
+        disabled={pending}
+        onClick={() => setClicked("published")}
+        className="flex-1 rounded-md border border-[var(--fg)] px-4 py-2.5 text-sm transition hover:bg-[var(--fg)] hover:text-[var(--bg)] disabled:opacity-60"
+      >
+        {pending && clicked === "published" ? "Publishing…" : "Publish"}
+      </button>
+    </div>
+  );
+}
 
 export function ArticleForm({
   article,
@@ -66,6 +100,28 @@ export function ArticleForm({
         </div>
 
         <div className="rounded-xl border border-line bg-card p-5 space-y-4">
+          <p className="text-sm font-medium">Schedule</p>
+          <Field label="Publish at (optional)">
+            <input
+              type="datetime-local"
+              name="publish_at"
+              defaultValue={toDatetimeLocalValue(article?.published_at)}
+              className={inputCls}
+            />
+            <p className="mt-1 text-xs text-muted">Leave blank to publish immediately when you hit Publish. Set a future date/time to schedule it to go live then instead.</p>
+          </Field>
+          <Field label="Unpublish at (optional)">
+            <input
+              type="datetime-local"
+              name="unpublish_at"
+              defaultValue={toDatetimeLocalValue(article?.unpublish_at)}
+              className={inputCls}
+            />
+            <p className="mt-1 text-xs text-muted">Automatically hides it from the site after this date/time. Leave blank to keep it live indefinitely.</p>
+          </Field>
+        </div>
+
+        <div className="rounded-xl border border-line bg-card p-5 space-y-4">
           <p className="text-sm font-medium">SEO</p>
           <Field label="SEO title">
             <input name="seo_title" defaultValue={article?.seo_title || ""} className={inputCls} />
@@ -85,24 +141,7 @@ export function ArticleForm({
           </a>
         )}
 
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            name="status"
-            value="draft"
-            className="flex-1 rounded-md border border-line px-4 py-2.5 text-sm text-muted transition hover:text-[var(--fg)]"
-          >
-            Save draft
-          </button>
-          <button
-            type="submit"
-            name="status"
-            value="published"
-            className="flex-1 rounded-md border border-[var(--fg)] px-4 py-2.5 text-sm transition hover:bg-[var(--fg)] hover:text-[var(--bg)]"
-          >
-            Publish
-          </button>
-        </div>
+        <ArticleSaveButtons />
       </aside>
     </form>
   );

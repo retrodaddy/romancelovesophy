@@ -162,7 +162,18 @@ export async function saveArticle(formData: FormData) {
 
   const cover = formData.get("cover") as File | null;
   if (cover && cover.size > 0) base.cover_image = await uploadFile("article-images", cover);
-  if (status === "published") base.published_at = new Date().toISOString();
+
+  // Scheduled publishing: an explicit "Publish at" wins (can be future-dated
+  // to schedule, or past-dated). With no explicit date, a brand-new article
+  // goes live immediately; re-saving an already-published article leaves its
+  // existing published_at alone instead of bumping it to "now" every edit.
+  const publishAtRaw = (formData.get("publish_at") as string | null) || "";
+  const unpublishAtRaw = (formData.get("unpublish_at") as string | null) || "";
+  if (status === "published") {
+    if (publishAtRaw) base.published_at = new Date(publishAtRaw).toISOString();
+    else if (!id) base.published_at = new Date().toISOString();
+  }
+  base.unpublish_at = unpublishAtRaw ? new Date(unpublishAtRaw).toISOString() : null;
 
   if (id) await sb.from("articles").update(base).eq("id", id);
   else await sb.from("articles").insert(base);

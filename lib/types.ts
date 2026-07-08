@@ -36,6 +36,7 @@ export type Article = {
   seo_desc: string | null;
   views: number | null;
   published_at: string | null;
+  unpublish_at: string | null;
   created_at: string;
   updated_at: string;
 };

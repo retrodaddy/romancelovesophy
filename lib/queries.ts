@@ -60,12 +60,19 @@ export async function getFeaturedQuote(
   return recent[0] ?? null;
 }
 
+// Scheduled publishing: published_at doubles as the "go live at" time (can
+// be set in the future), unpublish_at optionally auto-hides it afterwards.
+// Both getArticles and getArticleBySlug respect this window so a scheduled
+// or expired piece never leaks to the public — including by direct link.
 export async function getArticles(limit?: number): Promise<Article[]> {
   const sb = await createClient();
+  const nowIso = new Date().toISOString();
   let q = sb
     .from("articles")
     .select("*")
     .eq("status", "published")
+    .lte("published_at", nowIso)
+    .or(`unpublish_at.is.null,unpublish_at.gt.${nowIso}`)
     .order("published_at", { ascending: false });
   if (limit) q = q.limit(limit);
   const { data } = await q;
@@ -74,11 +81,14 @@ export async function getArticles(limit?: number): Promise<Article[]> {
 
 export async function getArticleBySlug(slug: string): Promise<Article | null> {
   const sb = await createClient();
+  const nowIso = new Date().toISOString();
   const { data } = await sb
     .from("articles")
     .select("*")
     .eq("slug", slug)
     .eq("status", "published")
+    .lte("published_at", nowIso)
+    .or(`unpublish_at.is.null,unpublish_at.gt.${nowIso}`)
     .maybeSingle();
   return data as Article | null;
 }
