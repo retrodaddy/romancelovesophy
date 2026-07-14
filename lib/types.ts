@@ -53,6 +53,8 @@ export type Quote = {
   height: number | null;
   download_count: number;
   status: "draft" | "published";
+  published_at: string | null;
+  unpublish_at: string | null;
   created_at: string;
 };
 

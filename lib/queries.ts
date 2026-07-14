@@ -42,13 +42,21 @@ export async function getCategories(): Promise<Category[]> {
   return (data ?? []) as Category[];
 }
 
+// Scheduled publishing, same convention as articles: published_at doubles as
+// the "go live at" time (can be future-dated to schedule a quote ahead of
+// time), unpublish_at optionally auto-hides it afterwards. Both getQuotes and
+// getQuoteById respect this window so a scheduled or expired quote never
+// leaks to the public — including by direct link to /quotes/[id].
 export async function getQuotes(limit?: number): Promise<Quote[]> {
   const sb = await createClient();
+  const nowIso = new Date().toISOString();
   let q = sb
     .from("quotes")
     .select("*")
     .eq("status", "published")
-    .order("created_at", { ascending: false });
+    .lte("published_at", nowIso)
+    .or(`unpublish_at.is.null,unpublish_at.gt.${nowIso}`)
+    .order("published_at", { ascending: false });
   if (limit) q = q.limit(limit);
   const { data, error } = await q;
   logQueryError("getQuotes", error);
@@ -57,9 +65,31 @@ export async function getQuotes(limit?: number): Promise<Quote[]> {
 
 export async function getQuoteById(id: string): Promise<Quote | null> {
   const sb = await createClient();
-  const { data, error } = await sb.from("quotes").select("*").eq("id", id).maybeSingle();
+  const nowIso = new Date().toISOString();
+  const { data, error } = await sb
+    .from("quotes")
+    .select("*")
+    .eq("id", id)
+    .eq("status", "published")
+    .lte("published_at", nowIso)
+    .or(`unpublish_at.is.null,unpublish_at.gt.${nowIso}`)
+    .maybeSingle();
   logQueryError("getQuoteById", error);
   return data as Quote | null;
+}
+
+// Unfiltered — for the admin gallery and the "featured quote" picker, which
+// both need to see/manage drafts, scheduled, and expired quotes too, not
+// just what's currently live on the public site.
+export async function getAdminQuotes(): Promise<Quote[]> {
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const sb = createAdminClient();
+  const { data, error } = await sb
+    .from("quotes")
+    .select("*")
+    .order("created_at", { ascending: false });
+  logQueryError("getAdminQuotes", error);
+  return (data ?? []) as Quote[];
 }
 
 // Featured = explicit pick in settings, else the most recent quote.

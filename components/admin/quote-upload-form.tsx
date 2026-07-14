@@ -8,6 +8,7 @@ export function QuoteUploadForm({ allowedTags }: { allowedTags: string[] }) {
   const [preview, setPreview] = useState<string | null>(null);
   const [dims, setDims] = useState({ w: 0, h: 0 });
   const [pending, setPending] = useState(false);
+  const [clicked, setClicked] = useState<"draft" | "published" | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   function onFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -27,6 +28,7 @@ export function QuoteUploadForm({ allowedTags }: { allowedTags: string[] }) {
         setPending(true);
         await createQuote(fd);
         setPending(false);
+        setClicked(null);
         setPreview(null);
         setDims({ w: 0, h: 0 });
         formRef.current?.reset();
@@ -75,15 +77,41 @@ export function QuoteUploadForm({ allowedTags }: { allowedTags: string[] }) {
       {allowedTags.length === 0 && (
         <p className="-mt-2 text-xs text-muted">Add viewer tags in Settings to enable filtering.</p>
       )}
-      <input type="hidden" name="status" value="published" />
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md border border-[var(--fg)] px-5 py-2.5 text-sm transition hover:bg-[var(--fg)] hover:text-[var(--bg)] disabled:opacity-50"
-      >
-        {pending ? "Uploading…" : "Upload quote"}
-      </button>
+      <div className="space-y-3 rounded-lg border border-line p-4">
+        <p className="text-sm font-medium">Schedule</p>
+        <Field label="Publish at (optional)">
+          <input type="datetime-local" name="publish_at" className={inputCls} />
+          <p className="mt-1 text-xs text-muted">Leave blank to go live immediately. Set a future date/time to schedule it.</p>
+        </Field>
+        <Field label="Unpublish at (optional)">
+          <input type="datetime-local" name="unpublish_at" className={inputCls} />
+          <p className="mt-1 text-xs text-muted">Automatically hides it after this date/time. Leave blank to keep it live indefinitely.</p>
+        </Field>
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          name="status"
+          value="draft"
+          disabled={pending}
+          onClick={() => setClicked("draft")}
+          className="flex-1 rounded-md border border-line px-4 py-2.5 text-sm text-muted transition hover:text-[var(--fg)] disabled:opacity-60"
+        >
+          {pending && clicked === "draft" ? "Saving…" : "Save as draft"}
+        </button>
+        <button
+          type="submit"
+          name="status"
+          value="published"
+          disabled={pending}
+          onClick={() => setClicked("published")}
+          className="flex-1 rounded-md border border-[var(--fg)] px-4 py-2.5 text-sm transition hover:bg-[var(--fg)] hover:text-[var(--bg)] disabled:opacity-60"
+        >
+          {pending && clicked === "published" ? "Uploading…" : "Upload quote"}
+        </button>
+      </div>
     </form>
   );
 }

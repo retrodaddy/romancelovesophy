@@ -114,15 +114,33 @@ export async function createQuote(formData: FormData) {
   const h = Number(formData.get("height")) || imageSize().height;
 
   const tags = (formData.getAll("tags") as string[]).map((t) => t.trim()).filter(Boolean).slice(0, 2);
+  const status = (formData.get("status") as string) || "published";
 
-  await sb.from("quotes").insert({
+  // Scheduled publishing, same convention as articles: an explicit "Publish
+  // at" wins (future-dated to schedule it, or past-dated); with no explicit
+  // date a new published quote goes live immediately. Drafts get no
+  // published_at until they're actually published.
+  const publishAtRaw = (formData.get("publish_at") as string | null) || "";
+  const unpublishAtRaw = (formData.get("unpublish_at") as string | null) || "";
+  const published_at =
+    status === "published"
+      ? publishAtRaw
+        ? new Date(publishAtRaw).toISOString()
+        : new Date().toISOString()
+      : null;
+  const unpublish_at = unpublishAtRaw ? new Date(unpublishAtRaw).toISOString() : null;
+
+  const { error } = await sb.from("quotes").insert({
     title: formData.get("title") || null,
     caption: formData.get("caption") || null,
     alt_text: formData.get("alt_text") || null,
     category_id: formData.get("category_id") || null,
     tags, width: w, height: h, image_path,
-    status: formData.get("status") || "published",
+    status,
+    published_at,
+    unpublish_at,
   });
+  if (error) throw new Error("Upload failed: " + error.message);
 
   revalidatePath("/");
   revalidatePath("/quotes");
@@ -134,9 +152,48 @@ export async function deleteQuote(id: string) {
   const sb = createAdminClient();
   const { data } = await sb.from("quotes").select("image_path").eq("id", id).maybeSingle();
   if (data?.image_path) await sb.storage.from("quote-images").remove([data.image_path]);
-  await sb.from("quotes").delete().eq("id", id);
+  const { error } = await sb.from("quotes").delete().eq("id", id);
+  if (error) throw new Error("Delete failed: " + error.message);
   revalidatePath("/quotes");
   revalidatePath("/admin/quotes");
+}
+
+// Adjust an existing quote's schedule window without touching the image,
+// caption, or anything else about it.
+export async function updateQuoteSchedule(id: string, formData: FormData) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const publishAtRaw = (formData.get("publish_at") as string | null) || "";
+  const unpublishAtRaw = (formData.get("unpublish_at") as string | null) || "";
+
+  const patch: Record<string, unknown> = {
+    unpublish_at: unpublishAtRaw ? new Date(unpublishAtRaw).toISOString() : null,
+  };
+  if (publishAtRaw) patch.published_at = new Date(publishAtRaw).toISOString();
+
+  const { error } = await sb.from("quotes").update(patch).eq("id", id);
+  if (error) throw new Error("Schedule update failed: " + error.message);
+
+  revalidatePath("/");
+  revalidatePath("/quotes");
+  revalidatePath("/admin/quotes");
+  revalidatePath("/admin/settings");
+}
+
+// Quick pause/go-live toggle, same pattern as toggleArticleStatus.
+export async function toggleQuoteStatus(id: string, makeLive: boolean) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const patch: Record<string, unknown> = {
+    status: makeLive ? "published" : "draft",
+  };
+  if (makeLive) patch.published_at = new Date().toISOString();
+  const { error } = await sb.from("quotes").update(patch).eq("id", id);
+  if (error) throw new Error("Status update failed: " + error.message);
+  revalidatePath("/");
+  revalidatePath("/quotes");
+  revalidatePath("/admin/quotes");
+  revalidatePath("/admin/settings");
 }
 
 export async function saveArticle(formData: FormData) {

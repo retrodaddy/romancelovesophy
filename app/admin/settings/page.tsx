@@ -3,7 +3,7 @@ import { updateSettings } from "@/app/admin/actions";
 import { PageHeader, Card, Field, inputCls } from "@/components/admin/ui";
 import { PendingButton } from "@/components/admin/confirm-submit";
 import { BannerUploader } from "@/components/admin/banner-uploader";
-import { getQuotes, getSettings } from "@/lib/queries";
+import { getAdminQuotes, getSettings } from "@/lib/queries";
 import { storageUrl } from "@/lib/storage";
 
 function Toggle({
@@ -30,7 +30,7 @@ function Toggle({
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
   const saved = (await searchParams)?.saved === "1";
-  const [settings, quotes] = await Promise.all([getSettings(), getQuotes(50)]);
+  const [settings, quotes] = await Promise.all([getSettings(), getAdminQuotes()]);
   const portrait = storageUrl("portraits", settings?.portrait_path);
   const header = storageUrl("header", settings?.header_image);
 
