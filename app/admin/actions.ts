@@ -175,8 +175,10 @@ export async function saveArticle(formData: FormData) {
   }
   base.unpublish_at = unpublishAtRaw ? new Date(unpublishAtRaw).toISOString() : null;
 
-  if (id) await sb.from("articles").update(base).eq("id", id);
-  else await sb.from("articles").insert(base);
+  const { error } = id
+    ? await sb.from("articles").update(base).eq("id", id)
+    : await sb.from("articles").insert(base);
+  if (error) throw new Error("Save failed: " + error.message);
 
   revalidatePath("/articles");
   revalidatePath("/admin/articles");
@@ -186,7 +188,8 @@ export async function saveArticle(formData: FormData) {
 export async function deleteArticle(id: string) {
   await requireAdmin();
   const sb = createAdminClient();
-  await sb.from("articles").delete().eq("id", id);
+  const { error } = await sb.from("articles").delete().eq("id", id);
+  if (error) throw new Error("Delete failed: " + error.message);
   revalidatePath("/articles");
   revalidatePath("/admin/articles");
 }
