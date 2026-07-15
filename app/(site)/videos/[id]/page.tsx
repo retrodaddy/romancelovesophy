@@ -7,7 +7,7 @@ import { after } from "next/server";
 import { getChannelVideos, refreshIfStale } from "@/lib/youtube";
 import { relativeDate } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1800; // 30-min ISR for video detail (YouTube cached)
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;

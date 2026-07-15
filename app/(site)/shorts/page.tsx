@@ -3,7 +3,7 @@ import { ShortsFeed } from "@/components/site/shorts-feed";
 import { getSettings } from "@/lib/queries";
 import { getChannelVideos } from "@/lib/youtube";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1800; // 30-min ISR for shorts (similar to videos)
 
 export const metadata: Metadata = {
   title: "Shorts",

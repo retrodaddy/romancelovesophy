@@ -3,7 +3,7 @@ import { ArrowUpRight } from "lucide-react";
 import { SocialIcon } from "@/components/site/icons";
 import { getSocialLinks } from "@/lib/queries";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 604800; // 1-week ISR for static social links page
 
 export const metadata: Metadata = {
   title: "Connect",

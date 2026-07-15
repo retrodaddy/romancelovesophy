@@ -3,7 +3,7 @@ import { Download as DownloadIcon, FileText } from "lucide-react";
 import { getDownloads } from "@/lib/queries";
 import { storageUrl } from "@/lib/supabase/admin";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 86400; // 1-day ISR for downloads (rarely changes)
 
 export const metadata: Metadata = {
   title: "Downloads",

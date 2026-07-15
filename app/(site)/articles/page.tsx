@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ArticleCard } from "@/components/site/article-card";
 import { getArticles, getSettings } from "@/lib/queries";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // 1-hour ISR for articles list
 
 export const metadata: Metadata = {
   title: "Articles",

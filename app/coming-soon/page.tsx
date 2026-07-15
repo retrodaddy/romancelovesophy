@@ -1,7 +1,7 @@
 import { getSettings, getSocialLinks } from "@/lib/queries";
 import { SocialIcon } from "@/components/site/icons";
 
-export const dynamic = "force-dynamic";
+// Removed force-dynamic - coming-soon is fully static (built at deploy time)
 export const metadata = { title: "Coming soon", robots: { index: false } };
 
 export default async function ComingSoon() {

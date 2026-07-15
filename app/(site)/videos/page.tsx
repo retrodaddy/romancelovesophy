@@ -7,7 +7,7 @@ import { getSettings } from "@/lib/queries";
 import { getChannelVideos, refreshIfStale } from "@/lib/youtube";
 import { relativeDate } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1800; // 30-min ISR for videos (updates from YouTube periodically)
 const PER = 12;
 
 export const metadata: Metadata = {

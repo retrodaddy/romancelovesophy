@@ -12,7 +12,7 @@ import { formatDate } from "@/lib/utils";
 
 type Params = { params: Promise<{ slug: string }> };
 
-export const dynamic = "force-dynamic"; // count a read on every visit
+export const revalidate = 3600; // 1-hour ISR (increments view count on each revalidation)
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
