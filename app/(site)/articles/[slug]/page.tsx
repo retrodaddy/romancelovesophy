@@ -12,7 +12,10 @@ import { formatDate } from "@/lib/utils";
 
 type Params = { params: Promise<{ slug: string }> };
 
-export const revalidate = 3600; // 1-hour ISR (increments view count on each revalidation)
+// Always render fresh so a scheduled article becomes visible the instant its
+// published_at passes (also makes the view counter a real per-visit count
+// instead of an approximate once-per-hour bump).
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;

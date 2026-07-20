@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { ArticleCard } from "@/components/site/article-card";
 import { getArticles, getSettings } from "@/lib/queries";
 
-export const revalidate = 3600; // 1-hour ISR for articles list
+// Always render fresh so scheduled articles (gated by published_at) appear
+// the moment their scheduled time passes, instead of waiting on stale ISR.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Articles",

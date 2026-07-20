@@ -17,7 +17,11 @@ import {
 import { getLatestVideos } from "@/lib/youtube";
 import { storageUrl } from "@/lib/supabase/admin";
 
-export const revalidate = 1800; // 30-minute ISR for homepage (hero, featured quote, latest content)
+// Always render fresh: this page shows scheduled articles/quotes gated by
+// published_at, and nothing else was ever pinging Next.js to revalidate the
+// old ISR cache the moment a scheduled post's time arrived. force-dynamic
+// guarantees scheduled content goes live exactly on time.
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const settings = await getSettings();

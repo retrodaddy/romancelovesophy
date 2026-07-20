@@ -3,7 +3,9 @@ import Link from "next/link";
 import { QuoteGallery } from "@/components/site/quote-gallery";
 import { getQuotes, getSettings } from "@/lib/queries";
 
-export const revalidate = 3600; // 1-hour ISR for quote gallery (changes when quotes published)
+// Always render fresh so scheduled quote images (gated by published_at)
+// appear the moment their scheduled time passes, instead of waiting on stale ISR.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Quote gallery",
