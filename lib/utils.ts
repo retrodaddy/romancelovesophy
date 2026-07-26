@@ -46,17 +46,36 @@ export function formatDuration(ms: number): string {
 export const cn = (...classes: (string | false | null | undefined)[]) =>
   classes.filter(Boolean).join(" ");
 
+// The site is run from India, so all schedule inputs/displays use a fixed
+// IST offset rather than "local time" — the browser (client form) and the
+// server (Vercel, UTC) don't share a time zone, so relying on either one's
+// ambient local time made scheduled posts publish ~5.5 hours late.
+const IST_OFFSET_MS = (5 * 60 + 30) * 60_000;
+
 // Converts a stored ISO/UTC timestamp into the "YYYY-MM-DDTHH:mm" shape a
-// <input type="datetime-local"> needs, in the browser's local time zone.
+// <input type="datetime-local"> needs, rendered in IST.
 export function toDatetimeLocalValue(value: string | null | undefined): string {
   if (!value) return "";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "";
+  const ist = new Date(d.getTime() + IST_OFFSET_MS);
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${ist.getUTCFullYear()}-${pad(ist.getUTCMonth() + 1)}-${pad(ist.getUTCDate())}T${pad(ist.getUTCHours())}:${pad(ist.getUTCMinutes())}`;
 }
 
-// Short "12 Jul, 3:30 pm" style formatter for admin schedule badges.
+// Interprets a "YYYY-MM-DDTHH:mm" wall-clock string (from a
+// <input type="datetime-local">) as IST and returns the equivalent UTC ISO
+// timestamp for storage. Counterpart to toDatetimeLocalValue.
+export function istInputToUtcIso(value: string): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(value);
+  if (!m) return null;
+  const [, y, mo, d, h, mi] = m;
+  const utcMs = Date.UTC(+y, +mo - 1, +d, +h, +mi) - IST_OFFSET_MS;
+  return new Date(utcMs).toISOString();
+}
+
+// Short "12 Jul, 3:30 pm" style formatter for admin schedule badges, always
+// shown in IST regardless of where the page is rendered.
 export function formatDateTime(value: string | null): string {
   if (!value) return "";
   return new Date(value).toLocaleString("en-GB", {
@@ -65,5 +84,6 @@ export function formatDateTime(value: string | null): string {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
+    timeZone: "Asia/Kolkata",
   });
 }

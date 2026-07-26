@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { slugify, readingTime } from "@/lib/utils";
+import { slugify, readingTime, istInputToUtcIso } from "@/lib/utils";
 import { sendEmail, basicHtml, threadReplyAddress } from "@/lib/email";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -125,10 +125,10 @@ export async function createQuote(formData: FormData) {
   const published_at =
     status === "published"
       ? publishAtRaw
-        ? new Date(publishAtRaw).toISOString()
+        ? istInputToUtcIso(publishAtRaw)
         : new Date().toISOString()
       : null;
-  const unpublish_at = unpublishAtRaw ? new Date(unpublishAtRaw).toISOString() : null;
+  const unpublish_at = unpublishAtRaw ? istInputToUtcIso(unpublishAtRaw) : null;
 
   const { error } = await sb.from("quotes").insert({
     title: formData.get("title") || null,
@@ -167,9 +167,9 @@ export async function updateQuoteSchedule(id: string, formData: FormData) {
   const unpublishAtRaw = (formData.get("unpublish_at") as string | null) || "";
 
   const patch: Record<string, unknown> = {
-    unpublish_at: unpublishAtRaw ? new Date(unpublishAtRaw).toISOString() : null,
+    unpublish_at: unpublishAtRaw ? istInputToUtcIso(unpublishAtRaw) : null,
   };
-  if (publishAtRaw) patch.published_at = new Date(publishAtRaw).toISOString();
+  if (publishAtRaw) patch.published_at = istInputToUtcIso(publishAtRaw);
 
   const { error } = await sb.from("quotes").update(patch).eq("id", id);
   if (error) throw new Error("Schedule update failed: " + error.message);
@@ -227,10 +227,10 @@ export async function saveArticle(formData: FormData) {
   const publishAtRaw = (formData.get("publish_at") as string | null) || "";
   const unpublishAtRaw = (formData.get("unpublish_at") as string | null) || "";
   if (status === "published") {
-    if (publishAtRaw) base.published_at = new Date(publishAtRaw).toISOString();
+    if (publishAtRaw) base.published_at = istInputToUtcIso(publishAtRaw);
     else if (!id) base.published_at = new Date().toISOString();
   }
-  base.unpublish_at = unpublishAtRaw ? new Date(unpublishAtRaw).toISOString() : null;
+  base.unpublish_at = unpublishAtRaw ? istInputToUtcIso(unpublishAtRaw) : null;
 
   const { error } = id
     ? await sb.from("articles").update(base).eq("id", id)
