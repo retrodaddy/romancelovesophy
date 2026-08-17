@@ -9,5 +9,6 @@ export async function POST() {
   revalidatePath("/videos");
   revalidatePath("/quotes");
   revalidatePath("/articles");
+  revalidatePath("/doing-good");
   return NextResponse.json({ ok: true });
 }

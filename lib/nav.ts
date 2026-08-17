@@ -7,6 +7,7 @@ export const DEFAULT_NAV: NavItem[] = [
   { href: "/quotes", label: "Quotes", visible: true },
   { href: "/videos", label: "Videos", visible: true },
   { href: "/articles", label: "Writings", visible: true },
+  { href: "/doing-good", label: "Doing Good", visible: true },
   { href: "/connect", label: "Connect", visible: true },
 ];
 

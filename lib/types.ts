@@ -41,6 +41,24 @@ export type Article = {
   updated_at: string;
 };
 
+export type DoingGoodPost = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  content_html: string | null;
+  cover_image: string | null;
+  category_id: string | null;
+  status: "draft" | "published";
+  reading_time: number | null;
+  seo_title: string | null;
+  seo_desc: string | null;
+  published_at: string | null;
+  unpublish_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Quote = {
   id: string;
   title: string | null;

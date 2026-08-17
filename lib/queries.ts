@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import type {
   Article,
   Category,
+  DoingGoodPost,
   DownloadFile,
   Quote,
   Settings,
@@ -137,6 +138,39 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
     .maybeSingle();
   logQueryError("getArticleBySlug", error);
   return data as Article | null;
+}
+
+// Scheduled publishing, same convention as articles: published_at doubles as
+// the "go live at" time, unpublish_at optionally auto-hides it afterwards.
+export async function getDoingGoodPosts(limit?: number): Promise<DoingGoodPost[]> {
+  const sb = await createClient();
+  const nowIso = new Date().toISOString();
+  let q = sb
+    .from("doing_good_posts")
+    .select("*")
+    .eq("status", "published")
+    .lte("published_at", nowIso)
+    .or(`unpublish_at.is.null,unpublish_at.gt.${nowIso}`)
+    .order("published_at", { ascending: false });
+  if (limit) q = q.limit(limit);
+  const { data, error } = await q;
+  logQueryError("getDoingGoodPosts", error);
+  return (data ?? []) as DoingGoodPost[];
+}
+
+export async function getDoingGoodPostBySlug(slug: string): Promise<DoingGoodPost | null> {
+  const sb = await createClient();
+  const nowIso = new Date().toISOString();
+  const { data, error } = await sb
+    .from("doing_good_posts")
+    .select("*")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .lte("published_at", nowIso)
+    .or(`unpublish_at.is.null,unpublish_at.gt.${nowIso}`)
+    .maybeSingle();
+  logQueryError("getDoingGoodPostBySlug", error);
+  return data as DoingGoodPost | null;
 }
 
 export async function getDownloads(): Promise<DownloadFile[]> {

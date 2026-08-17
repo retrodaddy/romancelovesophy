@@ -242,6 +242,70 @@ export async function saveArticle(formData: FormData) {
   redirect("/admin/articles");
 }
 
+export async function saveDoingGood(formData: FormData) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const id = formData.get("id") as string | null;
+  const title = String(formData.get("title") || "").trim();
+  const content_html = String(formData.get("content_html") || "");
+  const status = (formData.get("status") as string) || "draft";
+
+  const base = {
+    title,
+    slug: (formData.get("slug") as string) || slugify(title),
+    excerpt: formData.get("excerpt") || null,
+    content_html,
+    category_id: formData.get("category_id") || null,
+    seo_title: formData.get("seo_title") || null,
+    seo_desc: formData.get("seo_desc") || null,
+    reading_time: readingTime(content_html),
+    status,
+    updated_at: new Date().toISOString(),
+  } as Record<string, unknown>;
+
+  const cover = formData.get("cover") as File | null;
+  if (cover && cover.size > 0) base.cover_image = await uploadFile("doing-good-images", cover);
+
+  const publishAtRaw = (formData.get("publish_at") as string | null) || "";
+  const unpublishAtRaw = (formData.get("unpublish_at") as string | null) || "";
+  if (status === "published") {
+    if (publishAtRaw) base.published_at = istInputToUtcIso(publishAtRaw);
+    else if (!id) base.published_at = new Date().toISOString();
+  }
+  base.unpublish_at = unpublishAtRaw ? istInputToUtcIso(unpublishAtRaw) : null;
+
+  const { error } = id
+    ? await sb.from("doing_good_posts").update(base).eq("id", id)
+    : await sb.from("doing_good_posts").insert(base);
+  if (error) throw new Error("Save failed: " + error.message);
+
+  revalidatePath("/doing-good");
+  revalidatePath("/admin/doing-good");
+  redirect("/admin/doing-good");
+}
+
+export async function deleteDoingGood(id: string) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const { error } = await sb.from("doing_good_posts").delete().eq("id", id);
+  if (error) throw new Error("Delete failed: " + error.message);
+  revalidatePath("/doing-good");
+  revalidatePath("/admin/doing-good");
+}
+
+export async function toggleDoingGoodStatus(id: string, makeLive: boolean) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const patch: Record<string, unknown> = {
+    status: makeLive ? "published" : "draft",
+    updated_at: new Date().toISOString(),
+  };
+  if (makeLive) patch.published_at = new Date().toISOString();
+  await sb.from("doing_good_posts").update(patch).eq("id", id);
+  revalidatePath("/doing-good");
+  revalidatePath("/admin/doing-good");
+}
+
 export async function deleteArticle(id: string) {
   await requireAdmin();
   const sb = createAdminClient();
